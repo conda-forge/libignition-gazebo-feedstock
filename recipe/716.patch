@@ -1,0 +1,30 @@
+From 1b63ca6aac3f4c8ed0e4bc5b49027bc6394b2457 Mon Sep 17 00:00:00 2001
+From: Silvio Traversaro <silvio.traversaro@iit.it>
+Date: Sun, 28 Mar 2021 15:30:27 +0200
+Subject: [PATCH] Do not pass -Wno-unused-parameter to MSVC compiler
+
+---
+ src/CMakeLists.txt | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index d529e58d9..a3521cf28 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -10,10 +10,12 @@ set_source_files_properties(
+ )
+ 
+ # Suppress compiler warnings in generated protobuf C++ code.
+-set_source_files_properties(
+-  ${PROTO_PRIVATE_SRC}
+-  COMPILE_FLAGS -Wno-unused-parameter
+-)
++if(NOT MSVC)
++  set_source_files_properties(
++    ${PROTO_PRIVATE_SRC}
++    COMPILE_FLAGS -Wno-unused-parameter
++  )
++endif()
+ 
+ set(network_sources
+   network/NetworkConfig.cc
