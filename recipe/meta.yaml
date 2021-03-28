@@ -13,6 +13,7 @@ source:
     sha256: 7a9664baacaeaba781d94cddec03534115c00cfe803ec64d89a04faa2e15a4b1
     patches:
       - win_support_protobuf.patch
+      - 716.patch
 
 build:
   number: 1
