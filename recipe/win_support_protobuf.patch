@@ -22,8 +22,8 @@ index b43ada245..f7436f56f 100644
                   REQUIRED
                   COMPONENTS all
                   PRETTY Protobuf)
--set(PROTOBUF_IMPORT_DIRS ${ignition-msgs5_INCLUDE_DIRS})
-+set(Protobuf_IMPORT_DIRS ${ignition-msgs5_INCLUDE_DIRS})
+-set(PROTOBUF_IMPORT_DIRS ${ignition-msgs6_INCLUDE_DIRS})
++set(Protobuf_IMPORT_DIRS ${ignition-msgs6_INCLUDE_DIRS})
  
  # Plugin install dirs
  set(IGNITION_GAZEBO_PLUGIN_INSTALL_DIR
