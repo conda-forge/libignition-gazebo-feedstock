@@ -14,6 +14,7 @@ source:
     patches:
       - win_support_protobuf.patch
       - 716.patch
+      - missing_optional_include.patch
 
 build:
   number: 1
