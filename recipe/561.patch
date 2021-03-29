@@ -1,0 +1,1746 @@
+From ca0c764454e54ce20402026b2cb0b7712b9a1e9d Mon Sep 17 00:00:00 2001
+From: Jose Luis Rivero <jrivero@osrfoundation.org>
+Date: Fri, 15 Jan 2021 17:18:08 +0100
+Subject: [PATCH 1/8] Use common::setenv for portability to Windows
+
+Signed-off-by: Jose Luis Rivero <jrivero@osrfoundation.org>
+---
+ src/Server_TEST.cc                            | 24 +++++++-------
+ src/SimulationRunner_TEST.cc                  |  4 +--
+ src/Util.cc                                   | 33 ++++++++++++++-----
+ src/gui/Gui_TEST.cc                           | 13 ++++----
+ src/ign_TEST.cc                               |  5 +--
+ src/network/PeerTracker_TEST.cc               | 11 ++++---
+ test/integration/air_pressure_system.cc       |  5 +--
+ test/integration/altimeter_system.cc          |  5 +--
+ test/integration/apply_joint_force_system.cc  |  5 +--
+ test/integration/battery_plugin.cc            |  5 +--
+ test/integration/breadcrumbs.cc               |  6 ++--
+ test/integration/buoyancy.cc                  |  5 +--
+ .../integration/camera_video_record_system.cc |  5 +--
+ test/integration/contact_system.cc            |  5 +--
+ test/integration/depth_camera.cc              |  5 +--
+ test/integration/detachable_joint.cc          |  5 +--
+ test/integration/diff_drive_system.cc         |  5 +--
+ test/integration/each_new_removed.cc          |  5 +--
+ test/integration/entity_erase.cc              |  4 +--
+ test/integration/events.cc                    |  5 +--
+ test/integration/examples_build.cc            |  1 +
+ test/integration/follow_actor_system.cc       |  5 +--
+ test/integration/gpu_lidar.cc                 |  5 +--
+ test/integration/imu_system.cc                |  5 +--
+ test/integration/joint_controller_system.cc   |  5 +--
+ .../joint_position_controller_system.cc       |  5 +--
+ .../joint_state_publisher_system.cc           |  5 +--
+ test/integration/level_manager.cc             |  6 ++--
+ .../level_manager_runtime_performers.cc       |  6 ++--
+ test/integration/lift_drag_system.cc          |  5 +--
+ test/integration/link.cc                      |  1 +
+ test/integration/log_system.cc                | 19 ++++++-----
+ .../logical_audio_sensor_plugin.cc            |  5 +--
+ test/integration/logical_camera_system.cc     |  5 +--
+ test/integration/magnetometer_system.cc       |  5 +--
+ test/integration/model.cc                     |  1 +
+ test/integration/multicopter.cc               |  7 ++--
+ test/integration/performer_detector.cc        |  4 +--
+ test/integration/physics_system.cc            |  5 +--
+ test/integration/pose_publisher_system.cc     |  5 +--
+ test/integration/rgbd_camera.cc               |  5 +--
+ test/integration/save_world.cc                |  1 +
+ test/integration/scene_broadcaster_system.cc  |  5 +--
+ test/integration/sdf_frame_semantics.cc       |  4 +--
+ test/integration/sensors_system.cc            |  4 +--
+ test/integration/thermal_system.cc            |  5 +--
+ test/integration/touch_plugin.cc              |  5 +--
+ test/integration/triggered_publisher.cc       |  5 +--
+ test/integration/user_commands.cc             |  5 +--
+ test/integration/velocity_control_system.cc   |  5 +--
+ test/integration/wheel_slip.cc                |  5 +--
+ test/integration/wind_effects.cc              |  5 +--
+ test/integration/world.cc                     |  1 +
+ test/performance/level_manager.cc             |  5 +--
+ 54 files changed, 196 insertions(+), 129 deletions(-)
+
+diff --git a/src/Server_TEST.cc b/src/Server_TEST.cc
+index a6ff94dbd..784089b9b 100644
+--- a/src/Server_TEST.cc
++++ b/src/Server_TEST.cc
+@@ -48,8 +48,8 @@ class ServerFixture : public ::testing::TestWithParam<int>
+   protected: void SetUp() override
+   {
+     // Augment the system plugin path.  In SetUp to avoid test order issues.
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+ 
+     ignition::common::Console::SetVerbosity(4);
+   }
+@@ -783,9 +783,9 @@ TEST_P(ServerFixture, Seed)
+ /////////////////////////////////////////////////
+ TEST_P(ServerFixture, ResourcePath)
+ {
+-  setenv("IGN_GAZEBO_RESOURCE_PATH",
++  ignition::common::setenv("IGN_GAZEBO_RESOURCE_PATH",
+          (std::string(PROJECT_SOURCE_PATH) + "/test/worlds:" +
+-          std::string(PROJECT_SOURCE_PATH) + "/test/worlds/models").c_str(), 1);
++          std::string(PROJECT_SOURCE_PATH) + "/test/worlds/models").c_str());
+ 
+   ServerConfig serverConfig;
+   serverConfig.SetSdfFile("resource_paths.sdf");
+@@ -871,8 +871,8 @@ TEST_P(ServerFixture, ResourcePath)
+ /////////////////////////////////////////////////
+ TEST_P(ServerFixture, GetResourcePaths)
+ {
+-  setenv("IGN_GAZEBO_RESOURCE_PATH",
+-      "/tmp/some/path:/home/user/another_path", 1);
++  ignition::common::setenv("IGN_GAZEBO_RESOURCE_PATH",
++      "/tmp/some/path:/home/user/another_path");
+ 
+   ServerConfig serverConfig;
+   gazebo::Server server(serverConfig);
+@@ -903,7 +903,7 @@ TEST_P(ServerFixture, CachedFuelWorld)
+ {
+   auto cachedWorldPath =
+     common::joinPaths(std::string(PROJECT_SOURCE_PATH), "test", "worlds");
+-  setenv("IGN_FUEL_CACHE_PATH", cachedWorldPath.c_str(), 1);
++  ignition::common::setenv("IGN_FUEL_CACHE_PATH", cachedWorldPath.c_str());
+ 
+   ServerConfig serverConfig;
+   auto fuelWorldURL =
+@@ -927,10 +927,10 @@ TEST_P(ServerFixture, CachedFuelWorld)
+ /////////////////////////////////////////////////
+ TEST_P(ServerFixture, AddResourcePaths)
+ {
+-  setenv("IGN_GAZEBO_RESOURCE_PATH",
+-      "/tmp/some/path:/home/user/another_path", 1);
+-  setenv("SDF_PATH", "", 1);
+-  setenv("IGN_FILE_PATH", "", 1);
++  ignition::common::setenv("IGN_GAZEBO_RESOURCE_PATH",
++      "/tmp/some/path:/home/user/another_path");
++  ignition::common::setenv("SDF_PATH", "");
++  ignition::common::setenv("IGN_FILE_PATH", "");
+ 
+   ServerConfig serverConfig;
+   gazebo::Server server(serverConfig);
+@@ -974,7 +974,7 @@ TEST_P(ServerFixture, AddResourcePaths)
+   // Check environment variables
+   for (auto env : {"IGN_GAZEBO_RESOURCE_PATH", "SDF_PATH", "IGN_FILE_PATH"})
+   {
+-    char *pathCStr = getenv(env);
++    char *pathCStr = std::getenv(env);
+ 
+     auto paths = common::Split(pathCStr, ':');
+     paths.erase(std::remove_if(paths.begin(), paths.end(),
+diff --git a/src/SimulationRunner_TEST.cc b/src/SimulationRunner_TEST.cc
+index 317d00aa9..29c51baa4 100644
+--- a/src/SimulationRunner_TEST.cc
++++ b/src/SimulationRunner_TEST.cc
+@@ -81,8 +81,8 @@ class SimulationRunnerTest : public ::testing::TestWithParam<int>
+   {
+     common::Console::SetVerbosity(4);
+ 
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-      (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++      (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ };
+ 
+diff --git a/src/Util.cc b/src/Util.cc
+index 5b5995ae9..05595af83 100644
+--- a/src/Util.cc
++++ b/src/Util.cc
+@@ -16,14 +16,23 @@
+ */
+ 
+ #ifndef __APPLE__
+-  #if __GNUC__ < 8
++  #if (defined(_MSVC_LANG))
++    #if (_MSVC_LANG >= 201703L || __cplusplus >= 201703L)
++      #include <filesystem> //C++17
++    #else
++      #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
++      #include <experimental/filesystem>
++    #endif
++  #elif __GNUC__ < 8
+     #include <experimental/filesystem>
+   #else
+     #include <filesystem>
+   #endif
+ #endif
++
+ #include <ignition/common/Filesystem.hh>
+ #include <ignition/common/StringUtils.hh>
++#include <ignition/common/Util.hh>
+ 
+ #include "ignition/gazebo/components/Actor.hh"
+ #include "ignition/gazebo/components/Collision.hh"
+@@ -257,7 +266,13 @@ std::string asFullPath(const std::string &_uri, const std::string &_filePath)
+   }
+ #else
+   // Not a relative path, return unmodified
+-  #if __GNUC__ < 8
++  #if (defined(_MSVC_LANG))
++    #if (_MSVC_LANG >= 201703L || __cplusplus >= 201703L)
++      using namespace std::filesystem;
++    #else
++      using namespace std::experimental::filesystem;
++    #endif
++  #elif __GNUC__ < 8
+     using namespace std::experimental::filesystem;
+   #else
+     using namespace std::filesystem;
+@@ -303,7 +318,7 @@ std::string asFullPath(const std::string &_uri, const std::string &_filePath)
+ std::vector<std::string> resourcePaths()
+ {
+   std::vector<std::string> gzPaths;
+-  char *gzPathCStr = getenv(kResourcePathEnv.c_str());
++  char *gzPathCStr = std::getenv(kResourcePathEnv.c_str());
+   if (gzPathCStr && *gzPathCStr != '\0')
+   {
+     gzPaths = common::Split(gzPathCStr, ':');
+@@ -323,7 +338,7 @@ void addResourcePaths(const std::vector<std::string> &_paths)
+ {
+   // SDF paths (for <include>s)
+   std::vector<std::string> sdfPaths;
+-  char *sdfPathCStr = getenv(kSdfPathEnv.c_str());
++  char *sdfPathCStr = std::getenv(kSdfPathEnv.c_str());
+   if (sdfPathCStr && *sdfPathCStr != '\0')
+   {
+     sdfPaths = common::Split(sdfPathCStr, ':');
+@@ -332,7 +347,7 @@ void addResourcePaths(const std::vector<std::string> &_paths)
+   // Ignition file paths (for <uri>s)
+   auto systemPaths = common::systemPaths();
+   std::vector<std::string> ignPaths;
+-  char *ignPathCStr = getenv(systemPaths->FilePathEnv().c_str());
++  char *ignPathCStr = std::getenv(systemPaths->FilePathEnv().c_str());
+   if (ignPathCStr && *ignPathCStr != '\0')
+   {
+     ignPaths = common::Split(ignPathCStr, ':');
+@@ -340,7 +355,7 @@ void addResourcePaths(const std::vector<std::string> &_paths)
+ 
+   // Gazebo resource paths
+   std::vector<std::string> gzPaths;
+-  char *gzPathCStr = getenv(kResourcePathEnv.c_str());
++  char *gzPathCStr = std::getenv(kResourcePathEnv.c_str());
+   if (gzPathCStr && *gzPathCStr != '\0')
+   {
+     gzPaths = common::Split(gzPathCStr, ':');
+@@ -374,19 +389,19 @@ void addResourcePaths(const std::vector<std::string> &_paths)
+   for (const auto &path : sdfPaths)
+     sdfPathsStr += ':' + path;
+ 
+-  setenv(kSdfPathEnv.c_str(), sdfPathsStr.c_str(), 1);
++  ignition::common::setenv(kSdfPathEnv.c_str(), sdfPathsStr.c_str());
+ 
+   std::string ignPathsStr;
+   for (const auto &path : ignPaths)
+     ignPathsStr += ':' + path;
+ 
+-  setenv(systemPaths->FilePathEnv().c_str(), ignPathsStr.c_str(), 1);
++  ignition::common::setenv(systemPaths->FilePathEnv().c_str(), ignPathsStr.c_str());
+ 
+   std::string gzPathsStr;
+   for (const auto &path : gzPaths)
+     gzPathsStr += ':' + path;
+ 
+-  setenv(kResourcePathEnv.c_str(), gzPathsStr.c_str(), 1);
++  ignition::common::setenv(kResourcePathEnv.c_str(), gzPathsStr.c_str());
+ 
+   // Force re-evaluation
+   // SDF is evaluated at find call
+diff --git a/src/gui/Gui_TEST.cc b/src/gui/Gui_TEST.cc
+index 05245005e..7c61a211d 100644
+--- a/src/gui/Gui_TEST.cc
++++ b/src/gui/Gui_TEST.cc
+@@ -21,6 +21,7 @@
+ 
+ #include <ignition/common/Console.hh>
+ #include <ignition/common/StringUtils.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/transport/Node.hh>
+ #include <ignition/utilities/ExtraTestMacros.hh>
+ 
+@@ -40,10 +41,10 @@ TEST(GuiTest, IGN_UTILS_TEST_DISABLED_ON_MAC(PathManager))
+   common::Console::SetVerbosity(4);
+   igndbg << "Start test" << std::endl;
+ 
+-  setenv("IGN_GAZEBO_RESOURCE_PATH",
+-         "/from_env:/tmp/more_env", 1);
+-  setenv("SDF_PATH", "", 1);
+-  setenv("IGN_FILE_PATH", "", 1);
++  ignition::common::setenv("IGN_GAZEBO_RESOURCE_PATH",
++         "/from_env:/tmp/more_env");
++  ignition::common::setenv("SDF_PATH", "");
++  ignition::common::setenv("IGN_FILE_PATH", "");
+   igndbg << "Environment set" << std::endl;
+ 
+   transport::Node node;
+@@ -95,7 +96,7 @@ TEST(GuiTest, IGN_UTILS_TEST_DISABLED_ON_MAC(PathManager))
+   for (auto env : {"IGN_GAZEBO_RESOURCE_PATH", "SDF_PATH", "IGN_FILE_PATH"})
+   {
+     igndbg << "Checking variable [" << env << "]" << std::endl;
+-    char *pathCStr = getenv(env);
++    char *pathCStr = std::getenv(env);
+ 
+     auto paths = common::Split(pathCStr, ':');
+     paths.erase(std::remove_if(paths.begin(), paths.end(),
+@@ -141,7 +142,7 @@ TEST(GuiTest, IGN_UTILS_TEST_DISABLED_ON_MAC(PathManager))
+   for (auto env : {"IGN_GAZEBO_RESOURCE_PATH", "SDF_PATH", "IGN_FILE_PATH"})
+   {
+     igndbg << "Checking variable [" << env << "]" << std::endl;
+-    char *pathCStr = getenv(env);
++    char *pathCStr = std::getenv(env);
+ 
+     auto paths = common::Split(pathCStr, ':');
+     paths.erase(std::remove_if(paths.begin(), paths.end(),
+diff --git a/src/ign_TEST.cc b/src/ign_TEST.cc
+index c5d0fcdc7..0acdb5d49 100644
+--- a/src/ign_TEST.cc
++++ b/src/ign_TEST.cc
+@@ -20,6 +20,7 @@
+ #include <cstdlib>
+ 
+ #include <string>
++#include <ignition/common/Util.hh>
+ #include <ignition/utilities/ExtraTestMacros.hh>
+ 
+ #include "ignition/gazebo/test_config.hh"  // NOLINT(build/include)
+@@ -94,7 +95,7 @@ TEST(CmdLine, Server)
+ TEST(CmdLine, IGN_UTILS_TEST_DISABLED_ON_MAC(CachedFuelWorld))
+ {
+   std::string projectPath = std::string(PROJECT_SOURCE_PATH) + "/test/worlds";
+-  setenv("IGN_FUEL_CACHE_PATH", projectPath.c_str(), true);
++  ignition::common::setenv("IGN_FUEL_CACHE_PATH", projectPath.c_str());
+   std::string cmd = kIgnCommand + " -r -v 4 --iterations 5" +
+     " https://fuel.ignitionrobotics.org/1.0/OpenRobotics/worlds/Test%20world";
+   std::cout << "Running command [" << cmd << "]" << std::endl;
+@@ -172,7 +173,7 @@ int main(int _argc, char **_argv)
+ {
+   // Set IGN_CONFIG_PATH to the directory where the .yaml configuration files
+   // is located.
+-  setenv("IGN_CONFIG_PATH", IGN_CONFIG_PATH, 1);
++  ignition::common::setenv("IGN_CONFIG_PATH", IGN_CONFIG_PATH);
+ 
+   ::testing::InitGoogleTest(&_argc, _argv);
+   return RUN_ALL_TESTS();
+diff --git a/src/network/PeerTracker_TEST.cc b/src/network/PeerTracker_TEST.cc
+index abb46cf6b..4435c8c26 100644
+--- a/src/network/PeerTracker_TEST.cc
++++ b/src/network/PeerTracker_TEST.cc
+@@ -19,6 +19,7 @@
+ 
+ #include <cstdlib>
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ 
+ #include "PeerTracker.hh"
+ #include "ignition/gazebo/EventManager.hh"
+@@ -281,11 +282,11 @@ TEST(PeerTracker, PartitionedEnv)
+   ignition::common::Console::SetVerbosity(4);
+   EventManager eventMgr;
+ 
+-  setenv("IGN_PARTITION", "p1", 1);
++  ignition::common::setenv("IGN_PARTITION", "p1");
+   auto tracker1 = PeerTracker(
+       PeerInfo(NetworkRole::SimulationPrimary), &eventMgr);
+ 
+-  setenv("IGN_PARTITION", "p2", 1);
++  ignition::common:setenv("IGN_PARTITION", "p2");
+   auto tracker2 = PeerTracker(
+       PeerInfo(NetworkRole::SimulationPrimary), &eventMgr);
+ 
+@@ -296,11 +297,11 @@ TEST(PeerTracker, PartitionedEnv)
+   EXPECT_EQ(0u, tracker1.NumPeers());
+   EXPECT_EQ(0u, tracker2.NumPeers());
+ 
+-  setenv("IGN_PARTITION", "p1", 1);
++  ignition::common:setenv("IGN_PARTITION", "p1");
+   auto tracker3 = PeerTracker(
+       PeerInfo(NetworkRole::SimulationSecondary), &eventMgr);
+ 
+-  setenv("IGN_PARTITION", "p2", 1);
++  ignition::common:setenv("IGN_PARTITION", "p2");
+   auto tracker4 = PeerTracker(
+       PeerInfo(NetworkRole::SimulationSecondary), &eventMgr);
+ 
+@@ -314,6 +315,6 @@ TEST(PeerTracker, PartitionedEnv)
+   EXPECT_EQ(1u, tracker3.NumPeers());
+   EXPECT_EQ(1u, tracker4.NumPeers());
+ 
+-  unsetenv("IGN_PARTITION");
++  ignition::common:unsetenv("IGN_PARTITION");
+ }
+ #endif
+diff --git a/test/integration/air_pressure_system.cc b/test/integration/air_pressure_system.cc
+index 33ccfc913..be8e2d95f 100644
+--- a/test/integration/air_pressure_system.cc
++++ b/test/integration/air_pressure_system.cc
+@@ -20,6 +20,7 @@
+ #include <ignition/msgs/fluid_pressure.pb.h>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/transport/Node.hh>
+ 
+ #include "ignition/gazebo/components/AirPressureSensor.hh"
+@@ -40,8 +41,8 @@ class AirPressureTest : public ::testing::Test
+   protected: void SetUp() override
+   {
+     ignition::common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ };
+ 
+diff --git a/test/integration/altimeter_system.cc b/test/integration/altimeter_system.cc
+index ddde3b23f..595888812 100644
+--- a/test/integration/altimeter_system.cc
++++ b/test/integration/altimeter_system.cc
+@@ -21,6 +21,7 @@
+ #include <mutex>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/math/Pose3.hh>
+ #include <ignition/transport/Node.hh>
+ 
+@@ -46,8 +47,8 @@ class AltimeterTest : public ::testing::Test
+   protected: void SetUp() override
+   {
+     ignition::common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ };
+ 
+diff --git a/test/integration/apply_joint_force_system.cc b/test/integration/apply_joint_force_system.cc
+index c36e9d83b..cc309c311 100644
+--- a/test/integration/apply_joint_force_system.cc
++++ b/test/integration/apply_joint_force_system.cc
+@@ -20,6 +20,7 @@
+ #include <ignition/msgs/double.pb.h>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/transport/Node.hh>
+ 
+ #include "ignition/gazebo/components/Joint.hh"
+@@ -44,8 +45,8 @@ class ApplyJointForceTestFixture : public ::testing::Test
+   protected: void SetUp() override
+   {
+     ignition::common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ };
+ 
+diff --git a/test/integration/battery_plugin.cc b/test/integration/battery_plugin.cc
+index 9422b60e7..bd894299d 100644
+--- a/test/integration/battery_plugin.cc
++++ b/test/integration/battery_plugin.cc
+@@ -21,6 +21,7 @@
+ 
+ #include <ignition/common/Battery.hh>
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/common/Filesystem.hh>
+ 
+ #include <sdf/Root.hh>
+@@ -48,8 +49,8 @@ class BatteryPluginTest : public ::testing::Test
+   protected: void SetUp() override
+   {
+     common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+ 
+     auto plugin = sm.LoadPlugin("libMockSystem.so",
+                                 "ignition::gazebo::MockSystem",
+diff --git a/test/integration/breadcrumbs.cc b/test/integration/breadcrumbs.cc
+index 2644cde33..b458130b9 100644
+--- a/test/integration/breadcrumbs.cc
++++ b/test/integration/breadcrumbs.cc
+@@ -20,12 +20,14 @@
+ #include <ignition/msgs/empty.pb.h>
+ #include <ignition/msgs/twist.pb.h>
+ 
++#include <optional>
+ #include <regex>
+ 
+ #include <sdf/Root.hh>
+ #include <sdf/World.hh>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/transport/Node.hh>
+ 
+ #include "ignition/gazebo/Entity.hh"
+@@ -48,8 +50,8 @@ class BreadcrumbsTest : public ::testing::Test
+   protected: void SetUp() override
+   {
+     ignition::common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+   public: void LoadWorld(const std::string &_path, bool _useLevels = false)
+   {
+diff --git a/test/integration/buoyancy.cc b/test/integration/buoyancy.cc
+index 034346b00..41c7d530e 100644
+--- a/test/integration/buoyancy.cc
++++ b/test/integration/buoyancy.cc
+@@ -18,6 +18,7 @@
+ #include <gtest/gtest.h>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ 
+ #include "ignition/gazebo/Server.hh"
+ #include "ignition/gazebo/SystemLoader.hh"
+@@ -41,8 +42,8 @@ class BuoyancyTest : public ::testing::Test
+   protected: void SetUp() override
+   {
+     ignition::common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ };
+ 
+diff --git a/test/integration/camera_video_record_system.cc b/test/integration/camera_video_record_system.cc
+index 01b4642ce..07968ccfe 100644
+--- a/test/integration/camera_video_record_system.cc
++++ b/test/integration/camera_video_record_system.cc
+@@ -17,6 +17,7 @@
+ 
+ #include <gtest/gtest.h>
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/transport/Node.hh>
+ #include <ignition/utilities/ExtraTestMacros.hh>
+ 
+@@ -36,8 +37,8 @@ class CameraVideoRecorderTest : public ::testing::Test
+   protected: void SetUp() override
+   {
+     common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ };
+ 
+diff --git a/test/integration/contact_system.cc b/test/integration/contact_system.cc
+index 438ef1e04..589c3ff3c 100644
+--- a/test/integration/contact_system.cc
++++ b/test/integration/contact_system.cc
+@@ -22,6 +22,7 @@
+ #include <thread>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/transport/Node.hh>
+ 
+ #include "ignition/gazebo/Server.hh"
+@@ -39,8 +40,8 @@ class ContactSystemTest : public ::testing::Test
+   protected: void SetUp() override
+   {
+     ignition::common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ };
+ 
+diff --git a/test/integration/depth_camera.cc b/test/integration/depth_camera.cc
+index 54bfee788..8e478e1a9 100644
+--- a/test/integration/depth_camera.cc
++++ b/test/integration/depth_camera.cc
+@@ -20,6 +20,7 @@
+ #include <ignition/msgs/image.pb.h>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/math/Pose3.hh>
+ #include <ignition/transport/Node.hh>
+ #include <ignition/utilities/ExtraTestMacros.hh>
+@@ -41,8 +42,8 @@ class DepthCameraTest : public ::testing::Test
+   protected: void SetUp() override
+   {
+     ignition::common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ };
+ 
+diff --git a/test/integration/detachable_joint.cc b/test/integration/detachable_joint.cc
+index 61744f2c1..53ed104f3 100644
+--- a/test/integration/detachable_joint.cc
++++ b/test/integration/detachable_joint.cc
+@@ -17,6 +17,7 @@
+ 
+ #include <gtest/gtest.h>
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/msgs/Utility.hh>
+ #include <ignition/transport/Node.hh>
+ 
+@@ -45,8 +46,8 @@ class DetachableJointTest : public ::testing::Test
+   protected: void SetUp() override
+   {
+     common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ 
+   public: void StartServer(const std::string &_sdfFile)
+diff --git a/test/integration/diff_drive_system.cc b/test/integration/diff_drive_system.cc
+index 1a1d2888f..6be3a1929 100644
+--- a/test/integration/diff_drive_system.cc
++++ b/test/integration/diff_drive_system.cc
+@@ -17,6 +17,7 @@
+ 
+ #include <gtest/gtest.h>
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/math/Pose3.hh>
+ #include <ignition/transport/Node.hh>
+ 
+@@ -42,8 +43,8 @@ class DiffDriveTest : public ::testing::TestWithParam<int>
+   protected: void SetUp() override
+   {
+     common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ 
+   /// \param[in] _sdfFile SDF file to load.
+diff --git a/test/integration/each_new_removed.cc b/test/integration/each_new_removed.cc
+index 5e5d2e2c6..a7a88639b 100644
+--- a/test/integration/each_new_removed.cc
++++ b/test/integration/each_new_removed.cc
+@@ -21,6 +21,7 @@
+ #include <vector>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <sdf/World.hh>
+ 
+ #include "ignition/gazebo/components/Factory.hh"
+@@ -42,8 +43,8 @@ class EachNewRemovedFixture : public ::testing::Test
+   protected: void SetUp() override
+   {
+     // Augment the system plugin path.  In SetUp to avoid test order issues.
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-      (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++      (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ };
+ 
+diff --git a/test/integration/entity_erase.cc b/test/integration/entity_erase.cc
+index 711a99897..bb017612a 100644
+--- a/test/integration/entity_erase.cc
++++ b/test/integration/entity_erase.cc
+@@ -29,8 +29,8 @@ class PhysicsSystemFixture : public ::testing::Test
+   protected: void SetUp() override
+   {
+     // Augment the system plugin path.  In SetUp to avoid test order issues.
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-      (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++      (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ };
+ 
+diff --git a/test/integration/events.cc b/test/integration/events.cc
+index 0a85a6764..34e95990d 100644
+--- a/test/integration/events.cc
++++ b/test/integration/events.cc
+@@ -17,6 +17,7 @@
+ 
+ #include <gtest/gtest.h>
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ 
+ #include "ignition/gazebo/Server.hh"
+ #include "ignition/gazebo/SystemLoader.hh"
+@@ -32,8 +33,8 @@ TEST(EventTrigger, TriggerPause)
+ {
+   common::Console::SetVerbosity(4);
+ 
+-  setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-    (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++  ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++    (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+ 
+   // Create server
+   ServerConfig config;
+diff --git a/test/integration/examples_build.cc b/test/integration/examples_build.cc
+index 9c916b563..8f67192f5 100644
+--- a/test/integration/examples_build.cc
++++ b/test/integration/examples_build.cc
+@@ -19,6 +19,7 @@
+ #include <string>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/common/Filesystem.hh>
+ 
+ #include "ignition/gazebo/test_config.hh"
+diff --git a/test/integration/follow_actor_system.cc b/test/integration/follow_actor_system.cc
+index 28ca5191c..cc719534f 100644
+--- a/test/integration/follow_actor_system.cc
++++ b/test/integration/follow_actor_system.cc
+@@ -17,6 +17,7 @@
+ 
+ #include <gtest/gtest.h>
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/math/Pose3.hh>
+ 
+ #include "ignition/gazebo/components/Actor.hh"
+@@ -41,8 +42,8 @@ class FollowActorTest : public ::testing::TestWithParam<int>
+   protected: void SetUp() override
+   {
+     common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ };
+ 
+diff --git a/test/integration/gpu_lidar.cc b/test/integration/gpu_lidar.cc
+index 15de65134..fa69df3b9 100644
+--- a/test/integration/gpu_lidar.cc
++++ b/test/integration/gpu_lidar.cc
+@@ -20,6 +20,7 @@
+ #include <ignition/msgs/laserscan.pb.h>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/transport/Node.hh>
+ #include <ignition/utilities/ExtraTestMacros.hh>
+ 
+@@ -40,8 +41,8 @@ class GpuLidarTest : public ::testing::Test
+   protected: void SetUp() override
+   {
+     ignition::common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ };
+ 
+diff --git a/test/integration/imu_system.cc b/test/integration/imu_system.cc
+index a7b439bbe..f7ae7b65c 100644
+--- a/test/integration/imu_system.cc
++++ b/test/integration/imu_system.cc
+@@ -20,6 +20,7 @@
+ #include <ignition/msgs/imu.pb.h>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/math/Pose3.hh>
+ #include <ignition/transport/Node.hh>
+ 
+@@ -49,8 +50,8 @@ class ImuTest : public ::testing::Test
+   protected: void SetUp() override
+   {
+     ignition::common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ };
+ 
+diff --git a/test/integration/joint_controller_system.cc b/test/integration/joint_controller_system.cc
+index 9d216333a..faf510ec5 100644
+--- a/test/integration/joint_controller_system.cc
++++ b/test/integration/joint_controller_system.cc
+@@ -20,6 +20,7 @@
+ #include <ignition/msgs/double.pb.h>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/transport/Node.hh>
+ 
+ #include "ignition/gazebo/components/AngularVelocity.hh"
+@@ -44,8 +45,8 @@ class JointControllerTestFixture : public ::testing::Test
+   protected: void SetUp() override
+   {
+     ignition::common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ };
+ 
+diff --git a/test/integration/joint_position_controller_system.cc b/test/integration/joint_position_controller_system.cc
+index b30ab4fcc..10a1a2dbb 100644
+--- a/test/integration/joint_position_controller_system.cc
++++ b/test/integration/joint_position_controller_system.cc
+@@ -20,6 +20,7 @@
+ #include <ignition/msgs/double.pb.h>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/transport/Node.hh>
+ 
+ #include "ignition/gazebo/components/Joint.hh"
+@@ -44,8 +45,8 @@ class JointPositionControllerTestFixture : public ::testing::Test
+   protected: void SetUp() override
+   {
+     ignition::common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ };
+ 
+diff --git a/test/integration/joint_state_publisher_system.cc b/test/integration/joint_state_publisher_system.cc
+index a2894c998..64f7f3b16 100644
+--- a/test/integration/joint_state_publisher_system.cc
++++ b/test/integration/joint_state_publisher_system.cc
+@@ -17,6 +17,7 @@
+ 
+ #include <gtest/gtest.h>
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/transport/Node.hh>
+ 
+ #include "ignition/gazebo/Server.hh"
+@@ -33,8 +34,8 @@ class JointStatePublisherTest : public ::testing::TestWithParam<int>
+   protected: void SetUp() override
+   {
+     common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ };
+ 
+diff --git a/test/integration/level_manager.cc b/test/integration/level_manager.cc
+index be1ac4ebb..d9e8858e2 100644
+--- a/test/integration/level_manager.cc
++++ b/test/integration/level_manager.cc
+@@ -18,9 +18,11 @@
+ 
+ #include <gtest/gtest.h>
+ 
++#include <optional>
+ #include <vector>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <sdf/Box.hh>
+ #include <sdf/Cylinder.hh>
+ #include <sdf/Joint.hh>
+@@ -102,8 +104,8 @@ class LevelManagerFixture : public ::testing::Test
+   {
+     common::Console::SetVerbosity(4);
+ 
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-      (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++      (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+ 
+     ignition::gazebo::ServerConfig serverConfig;
+ 
+diff --git a/test/integration/level_manager_runtime_performers.cc b/test/integration/level_manager_runtime_performers.cc
+index 5abd56414..ccb8b63ba 100644
+--- a/test/integration/level_manager_runtime_performers.cc
++++ b/test/integration/level_manager_runtime_performers.cc
+@@ -20,9 +20,11 @@
+ #include <ignition/msgs/boolean.pb.h>
+ #include <ignition/msgs/stringmsg.pb.h>
+ 
++#include <optional>
+ #include <vector>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/transport/Node.hh>
+ 
+ #include "ignition/gazebo/Server.hh"
+@@ -99,8 +101,8 @@ class LevelManagerFixture : public ::testing::Test
+   {
+     common::Console::SetVerbosity(4);
+ 
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-      (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++      (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+ 
+     ignition::gazebo::ServerConfig serverConfig;
+ 
+diff --git a/test/integration/lift_drag_system.cc b/test/integration/lift_drag_system.cc
+index b803d59f2..72ecf28d9 100644
+--- a/test/integration/lift_drag_system.cc
++++ b/test/integration/lift_drag_system.cc
+@@ -21,6 +21,7 @@
+ #include <ignition/msgs/Utility.hh>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/math/Pose3.hh>
+ 
+ #include "ignition/gazebo/components/AngularVelocity.hh"
+@@ -51,8 +52,8 @@ class LiftDragTestFixture : public ::testing::Test
+   protected: void SetUp() override
+   {
+     ignition::common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ };
+ 
+diff --git a/test/integration/link.cc b/test/integration/link.cc
+index 06a898d7f..bb112a644 100644
+--- a/test/integration/link.cc
++++ b/test/integration/link.cc
+@@ -18,6 +18,7 @@
+ #include <gtest/gtest.h>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ 
+ #include <ignition/gazebo/components/AngularVelocity.hh>
+ #include <ignition/gazebo/components/CanonicalLink.hh>
+diff --git a/test/integration/log_system.cc b/test/integration/log_system.cc
+index 06dc2b62e..935ab8830 100644
+--- a/test/integration/log_system.cc
++++ b/test/integration/log_system.cc
+@@ -27,6 +27,7 @@
+ #include <string>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/common/Filesystem.hh>
+ #include <ignition/fuel_tools/Zip.hh>
+ #include <ignition/transport/Node.hh>
+@@ -152,8 +153,8 @@ class LogSystemTest : public ::testing::Test
+   protected: void SetUp() override
+   {
+     common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ 
+   // Create a temporary directory in build path for recorded data
+@@ -338,7 +339,7 @@ TEST_F(LogSystemTest, LogDefaults)
+   std::string homeOrig;
+   common::env(IGN_HOMEDIR, homeOrig);
+   std::string homeFake = common::joinPaths(this->logsDir, "default");
+-  EXPECT_EQ(setenv(IGN_HOMEDIR, homeFake.c_str(), 1), 0);
++  EXPECT_EQ(ignition::common::setenv(IGN_HOMEDIR, homeFake.c_str()), 0);
+ 
+   // Test case 1:
+   // No path specified, on both command line and SDF. This does not go through
+@@ -422,7 +423,7 @@ TEST_F(LogSystemTest, LogDefaults)
+ #endif
+ 
+   // Revert environment variable after test is done
+-  EXPECT_EQ(setenv(IGN_HOMEDIR, homeOrig.c_str(), 1), 0);
++  EXPECT_EQ(ignition::common::setenv(IGN_HOMEDIR, homeOrig.c_str()), 0);
+ }
+ 
+ /////////////////////////////////////////////////
+@@ -478,7 +479,7 @@ TEST_F(LogSystemTest, LogPaths)
+   std::string homeOrig;
+   common::env(IGN_HOMEDIR, homeOrig);
+   std::string homeFake = common::joinPaths(this->logsDir, "default");
+-  EXPECT_EQ(setenv(IGN_HOMEDIR, homeFake.c_str(), 1), 0);
++  EXPECT_EQ(ignition::common::setenv(IGN_HOMEDIR, homeFake.c_str()), 0);
+ 
+   // Store number of files before running
+   auto logPath = common::joinPaths(homeFake.c_str(), ".ignition", "gazebo",
+@@ -691,7 +692,7 @@ TEST_F(LogSystemTest, LogPaths)
+ #endif
+ 
+   // Revert environment variable after test is done
+-  EXPECT_EQ(setenv(IGN_HOMEDIR, homeOrig.c_str(), 1), 0);
++  EXPECT_EQ(ignition::common::setenv(IGN_HOMEDIR, homeOrig.c_str()), 0);
+ 
+   this->RemoveLogsDir();
+ }
+@@ -1568,7 +1569,7 @@ TEST_F(LogSystemTest, LogResources)
+   std::string homeOrig;
+   common::env(IGN_HOMEDIR, homeOrig);
+   std::string homeFake = common::joinPaths(this->logsDir, "default");
+-  EXPECT_EQ(setenv(IGN_HOMEDIR, homeFake.c_str(), 1), 0);
++  EXPECT_EQ(ignition::common::setenv(IGN_HOMEDIR, homeFake.c_str()), 0);
+ 
+   const std::string recordPath = this->logDir;
+   std::string statePath = common::joinPaths(recordPath, "state.tlog");
+@@ -1633,7 +1634,7 @@ TEST_F(LogSystemTest, LogResources)
+       "models", "x2 config 1")));
+ 
+   // Revert environment variable after test is done
+-  EXPECT_EQ(setenv(IGN_HOMEDIR, homeOrig.c_str(), 1), 0);
++  EXPECT_EQ(ignition::common::setenv(IGN_HOMEDIR, homeOrig.c_str()), 0);
+ 
+   // Remove artifacts
+   this->RemoveLogsDir();
+@@ -1655,7 +1656,7 @@ TEST_F(LogSystemTest, LogTopics)
+   std::string homeOrig;
+   common::env(IGN_HOMEDIR, homeOrig);
+   std::string homeFake = common::joinPaths(this->logsDir, "default");
+-  EXPECT_EQ(setenv(IGN_HOMEDIR, homeFake.c_str(), 1), 0);
++  EXPECT_EQ(ignition::common::setenv(IGN_HOMEDIR, homeFake.c_str()), 0);
+ 
+   const std::string recordPath = this->logDir;
+   std::string statePath = common::joinPaths(recordPath, "state.tlog");
+diff --git a/test/integration/logical_audio_sensor_plugin.cc b/test/integration/logical_audio_sensor_plugin.cc
+index ddcbdf82f..eac68bcb4 100644
+--- a/test/integration/logical_audio_sensor_plugin.cc
++++ b/test/integration/logical_audio_sensor_plugin.cc
+@@ -24,6 +24,7 @@
+ #include <vector>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/math/Pose3.hh>
+ #include <ignition/msgs.hh>
+ #include <ignition/transport.hh>
+@@ -49,8 +50,8 @@ class LogicalAudioTest : public ::testing::Test
+   protected: void SetUp() override
+   {
+     ignition::common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ };
+ 
+diff --git a/test/integration/logical_camera_system.cc b/test/integration/logical_camera_system.cc
+index 2dc024141..9fb1985f5 100644
+--- a/test/integration/logical_camera_system.cc
++++ b/test/integration/logical_camera_system.cc
+@@ -20,6 +20,7 @@
+ #include <ignition/msgs/logical_camera_image.pb.h>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/math/Pose3.hh>
+ #include <ignition/transport/Node.hh>
+ 
+@@ -43,8 +44,8 @@ class LogicalCameraTest : public ::testing::Test
+   protected: void SetUp() override
+   {
+     ignition::common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ };
+ 
+diff --git a/test/integration/magnetometer_system.cc b/test/integration/magnetometer_system.cc
+index cf55eec35..85a702dd3 100644
+--- a/test/integration/magnetometer_system.cc
++++ b/test/integration/magnetometer_system.cc
+@@ -20,6 +20,7 @@
+ #include <ignition/msgs/magnetometer.pb.h>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/math/Pose3.hh>
+ #include <ignition/transport/Node.hh>
+ 
+@@ -47,8 +48,8 @@ class MagnetometerTest : public ::testing::Test
+   protected: void SetUp() override
+   {
+     ignition::common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ };
+ 
+diff --git a/test/integration/model.cc b/test/integration/model.cc
+index 07c7c2623..378db68d7 100644
+--- a/test/integration/model.cc
++++ b/test/integration/model.cc
+@@ -18,6 +18,7 @@
+ #include <gtest/gtest.h>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/math/Pose3.hh>
+ 
+ #include <ignition/gazebo/EntityComponentManager.hh>
+diff --git a/test/integration/multicopter.cc b/test/integration/multicopter.cc
+index b1c1fd11d..54ce5bb5f 100644
+--- a/test/integration/multicopter.cc
++++ b/test/integration/multicopter.cc
+@@ -18,9 +18,12 @@
+ 
+ #include <gtest/gtest.h>
+ 
++#include <optional>
++
+ #include <ignition/msgs.hh>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/transport/Node.hh>
+ 
+ #include "ignition/gazebo/components/AngularVelocity.hh"
+@@ -48,8 +51,8 @@ class MulticopterTest : public ::testing::Test
+   protected: void SetUp() override
+   {
+     ignition::common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ 
+   protected: std::unique_ptr<Server> StartServer(const std::string &_filePath)
+diff --git a/test/integration/performer_detector.cc b/test/integration/performer_detector.cc
+index 58f7be3af..ec9cb04b1 100644
+--- a/test/integration/performer_detector.cc
++++ b/test/integration/performer_detector.cc
+@@ -40,8 +40,8 @@ class PerformerDetectorTest : public ::testing::Test
+   protected: void SetUp() override
+   {
+     ignition::common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ 
+   protected: std::unique_ptr<Server> StartServer(const std::string &_filePath,
+diff --git a/test/integration/physics_system.cc b/test/integration/physics_system.cc
+index 171cf8c8c..c0fe7c662 100644
+--- a/test/integration/physics_system.cc
++++ b/test/integration/physics_system.cc
+@@ -21,6 +21,7 @@
+ #include <vector>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <sdf/Collision.hh>
+ #include <sdf/Cylinder.hh>
+ #include <sdf/Geometry.hh>
+@@ -67,8 +68,8 @@ class PhysicsSystemFixture : public ::testing::Test
+   {
+     common::Console::SetVerbosity(4);
+     // Augment the system plugin path.  In SetUp to avoid test order issues.
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-      (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++      (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ };
+ 
+diff --git a/test/integration/pose_publisher_system.cc b/test/integration/pose_publisher_system.cc
+index e8bb03c6d..e4e85e814 100644
+--- a/test/integration/pose_publisher_system.cc
++++ b/test/integration/pose_publisher_system.cc
+@@ -19,6 +19,7 @@
+ #include <mutex>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/math/Pose3.hh>
+ #include <ignition/transport/Node.hh>
+ 
+@@ -45,8 +46,8 @@ class PosePublisherTest : public ::testing::TestWithParam<int>
+   protected: void SetUp() override
+   {
+     common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ };
+ 
+diff --git a/test/integration/rgbd_camera.cc b/test/integration/rgbd_camera.cc
+index 68b617312..e0dbe70fd 100644
+--- a/test/integration/rgbd_camera.cc
++++ b/test/integration/rgbd_camera.cc
+@@ -20,6 +20,7 @@
+ #include <ignition/msgs/image.pb.h>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/math/Pose3.hh>
+ #include <ignition/transport/Node.hh>
+ #include <ignition/utilities/ExtraTestMacros.hh>
+@@ -41,8 +42,8 @@ class RgbdCameraTest : public ::testing::Test
+   protected: void SetUp() override
+   {
+     ignition::common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ };
+ 
+diff --git a/test/integration/save_world.cc b/test/integration/save_world.cc
+index 2ab31e760..885ff8033 100644
+--- a/test/integration/save_world.cc
++++ b/test/integration/save_world.cc
+@@ -27,6 +27,7 @@
+ #include <sdf/World.hh>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/common/Filesystem.hh>
+ #include <ignition/transport/Node.hh>
+ #include <ignition/utilities/ExtraTestMacros.hh>
+diff --git a/test/integration/scene_broadcaster_system.cc b/test/integration/scene_broadcaster_system.cc
+index 8caac8533..4faa5492b 100644
+--- a/test/integration/scene_broadcaster_system.cc
++++ b/test/integration/scene_broadcaster_system.cc
+@@ -21,6 +21,7 @@
+ #include <thread>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/transport/Node.hh>
+ 
+ #include "ignition/gazebo/Server.hh"
+@@ -35,8 +36,8 @@ class SceneBroadcasterTest : public ::testing::TestWithParam<int>
+   protected: void SetUp() override
+   {
+     common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ };
+ 
+diff --git a/test/integration/sdf_frame_semantics.cc b/test/integration/sdf_frame_semantics.cc
+index 8585952ce..43a7501be 100644
+--- a/test/integration/sdf_frame_semantics.cc
++++ b/test/integration/sdf_frame_semantics.cc
+@@ -51,8 +51,8 @@ class SdfFrameSemanticsTest : public ::testing::Test
+   protected: void SetUp() override
+   {
+     common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ 
+   public: void StartServer()
+diff --git a/test/integration/sensors_system.cc b/test/integration/sensors_system.cc
+index 41accfc49..a33aec55a 100644
+--- a/test/integration/sensors_system.cc
++++ b/test/integration/sensors_system.cc
+@@ -52,8 +52,8 @@ class SensorsFixture : public ::testing::Test
+   {
+     common::Console::SetVerbosity(4);
+     // Augment the system plugin path.  In SetUp to avoid test order issues.
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-      (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++      (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+ 
+     auto plugin = sm.LoadPlugin("libMockSystem.so",
+                                 "ignition::gazebo::MockSystem",
+diff --git a/test/integration/thermal_system.cc b/test/integration/thermal_system.cc
+index 4fffa35ee..ae69c7fcb 100644
+--- a/test/integration/thermal_system.cc
++++ b/test/integration/thermal_system.cc
+@@ -17,6 +17,7 @@
+ 
+ #include <gtest/gtest.h>
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/math/Pose3.hh>
+ #include <ignition/transport/Node.hh>
+ 
+@@ -41,8 +42,8 @@ class ThermalTest : public ::testing::Test
+   protected: void SetUp() override
+   {
+     common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ };
+ 
+diff --git a/test/integration/touch_plugin.cc b/test/integration/touch_plugin.cc
+index adee294a7..856b1e6be 100644
+--- a/test/integration/touch_plugin.cc
++++ b/test/integration/touch_plugin.cc
+@@ -17,6 +17,7 @@
+ 
+ #include <gtest/gtest.h>
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/transport/Node.hh>
+ 
+ #include "ignition/gazebo/Server.hh"
+@@ -32,8 +33,8 @@ class TouchPluginTest : public ::testing::Test
+   protected: void SetUp() override
+   {
+     common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ 
+   public: void StartServer(const std::string &_sdfFile)
+diff --git a/test/integration/triggered_publisher.cc b/test/integration/triggered_publisher.cc
+index 70230ba09..436ad8b99 100644
+--- a/test/integration/triggered_publisher.cc
++++ b/test/integration/triggered_publisher.cc
+@@ -25,6 +25,7 @@
+ #include <sdf/World.hh>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/transport/Node.hh>
+ 
+ #include "ignition/gazebo/Server.hh"
+@@ -46,8 +47,8 @@ class TriggeredPublisherTest : public ::testing::Test
+   protected: void SetUp() override
+   {
+     ignition::common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+     // Start server
+     ServerConfig serverConfig;
+     const auto sdfFile = std::string(PROJECT_SOURCE_PATH) +
+diff --git a/test/integration/user_commands.cc b/test/integration/user_commands.cc
+index 84c6f2fc3..9e017b6f8 100644
+--- a/test/integration/user_commands.cc
++++ b/test/integration/user_commands.cc
+@@ -20,6 +20,7 @@
+ #include <ignition/msgs/entity_factory.pb.h>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/math/Pose3.hh>
+ #include <ignition/transport/Node.hh>
+ 
+@@ -44,8 +45,8 @@ class UserCommandsTest : public ::testing::Test
+   protected: void SetUp() override
+   {
+     ignition::common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ };
+ 
+diff --git a/test/integration/velocity_control_system.cc b/test/integration/velocity_control_system.cc
+index b3f21ef9d..d93fc4ee5 100644
+--- a/test/integration/velocity_control_system.cc
++++ b/test/integration/velocity_control_system.cc
+@@ -17,6 +17,7 @@
+ 
+ #include <gtest/gtest.h>
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/math/Pose3.hh>
+ #include <ignition/transport/Node.hh>
+ 
+@@ -40,8 +41,8 @@ class VelocityControlTest : public ::testing::TestWithParam<int>
+   protected: void SetUp() override
+   {
+     common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ 
+   /// \param[in] _sdfFile SDF file to load.
+diff --git a/test/integration/wheel_slip.cc b/test/integration/wheel_slip.cc
+index fb01a093b..7480197a3 100644
+--- a/test/integration/wheel_slip.cc
++++ b/test/integration/wheel_slip.cc
+@@ -20,6 +20,7 @@
+ #include <ignition/msgs/entity_factory.pb.h>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/math/Pose3.hh>
+ #include <ignition/transport/Node.hh>
+ 
+@@ -59,8 +60,8 @@ class WheelSlipTest : public ::testing::Test
+   protected: void SetUp() override
+              {
+                common::Console::SetVerbosity(4);
+-               setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-                   (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++               ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++                   (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+              }
+   /// \brief Class to hold parameters for tire tests.
+   public: class WheelSlipState
+diff --git a/test/integration/wind_effects.cc b/test/integration/wind_effects.cc
+index 81a6be595..a44174054 100644
+--- a/test/integration/wind_effects.cc
++++ b/test/integration/wind_effects.cc
+@@ -17,6 +17,7 @@
+ 
+ #include <gtest/gtest.h>
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/msgs/Utility.hh>
+ #include <ignition/transport/Node.hh>
+ 
+@@ -44,8 +45,8 @@ class WindEffectsTest : public ::testing::Test
+   protected: void SetUp() override
+   {
+     common::Console::SetVerbosity(4);
+-    setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++    ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++           (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+   }
+ 
+   public: void StartServer(const std::string &_sdfFile)
+diff --git a/test/integration/world.cc b/test/integration/world.cc
+index 642c39cdd..84f76fcb0 100644
+--- a/test/integration/world.cc
++++ b/test/integration/world.cc
+@@ -20,6 +20,7 @@
+ #include <sdf/Atmosphere.hh>
+ 
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/math/Pose3.hh>
+ 
+ #include <ignition/gazebo/EntityComponentManager.hh>
+diff --git a/test/performance/level_manager.cc b/test/performance/level_manager.cc
+index 4b56a19dc..1a6100b06 100644
+--- a/test/performance/level_manager.cc
++++ b/test/performance/level_manager.cc
+@@ -21,6 +21,7 @@
+ 
+ #include <ignition/math/Stopwatch.hh>
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ 
+ #include "ignition/gazebo/Server.hh"
+ #include "ignition/gazebo/SystemLoader.hh"
+@@ -35,8 +36,8 @@ TEST(LevelManagerPerfrormance, LevelVsNoLevel)
+ 
+   common::Console::SetVerbosity(4);
+ 
+-  setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+-         (std::string(PROJECT_BINARY_PATH) + "/lib").c_str(), 1);
++  ignition::common::setenv("IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
++         (std::string(PROJECT_BINARY_PATH) + "/lib").c_str());
+ 
+   ignition::gazebo::ServerConfig serverConfig;
+   serverConfig.SetSdfFile(std::string(PROJECT_SOURCE_PATH) +
+
+From ce40fcbe945a51996b072c8e2eff5ea5b9664510 Mon Sep 17 00:00:00 2001
+From: Jose Luis Rivero <jrivero@osrfoundation.org>
+Date: Fri, 15 Jan 2021 17:26:19 +0100
+Subject: [PATCH 2/8] Update SimulationRunner_TEST.cc
+
+---
+ src/SimulationRunner_TEST.cc | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/SimulationRunner_TEST.cc b/src/SimulationRunner_TEST.cc
+index 29c51baa4..09078037a 100644
+--- a/src/SimulationRunner_TEST.cc
++++ b/src/SimulationRunner_TEST.cc
+@@ -17,6 +17,7 @@
+ 
+ #include <gtest/gtest.h>
+ #include <ignition/common/Console.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/transport/Node.hh>
+ #include <sdf/Box.hh>
+ #include <sdf/Cylinder.hh>
+
+From 2afb19aa87bf2cc17aef4d7fb82b4381e7fea5e8 Mon Sep 17 00:00:00 2001
+From: Jose Luis Rivero <jrivero@osrfoundation.org>
+Date: Fri, 15 Jan 2021 18:08:35 +0100
+Subject: [PATCH 3/8] Remove auxiliary code. Need aliases for popen/pclose
+
+Signed-off-by: Jose Luis Rivero <jrivero@osrfoundation.org>
+---
+ test/test_config.hh.in | 32 +++-----------------------------
+ 1 file changed, 3 insertions(+), 29 deletions(-)
+
+diff --git a/test/test_config.hh.in b/test/test_config.hh.in
+index 7085a0dad..659f8e6fc 100644
+--- a/test/test_config.hh.in
++++ b/test/test_config.hh.in
+@@ -25,35 +25,9 @@
+ 
+ #define IGN_CONFIG_PATH "@CMAKE_BINARY_DIR@/test/conf"
+ 
+-#if (_MSC_VER >= 1400) // Visual Studio 2005
+-  #include <sstream>
+-
+-  /// \brief setenv/unstenv are not present in Windows. Define them to make
+-  /// the code portable.
+-  /// \param[in] _name Variable name.
+-  /// \param[in] _value Value.
+-  /// \param[in] _rewrite If 'name' does exist in the environment, then its
+-  /// value is changed to 'value' if 'rewrite' is nonzero. If overwrite is
+-  /// zero, then the value of 'name' is not changed.
+-  /// /return 0 on success or -1 on error.
+-  int setenv(const char *_name, const char *_value, int /*_rewrite*/)
+-  {
+-    std::stringstream sstr;
+-    std::string name = _name;
+-    std::string value = _value;
+-    sstr << name << '=' << value;
+-    return _putenv(sstr.str().c_str());
+-  }
+-
+-  /// \brief Deletes an environment variable.
+-  /// \param[in] _name Variable name.
+-  void unsetenv(const char *_name)
+-  {
+-    std::stringstream sstr;
+-    std::string name = _name;
+-    sstr << name << '=';
+-    _putenv(sstr.str().c_str());
+-  }
++#ifdef _MSC_VER
++#    define popen _popen
++#    define pclose _pclose
+ #endif
+ 
+ namespace ignition
+
+From 4dbb0ace39f6a2a51aaaa7472fc00a87614025ca Mon Sep 17 00:00:00 2001
+From: Jose Luis Rivero <jrivero@osrfoundation.org>
+Date: Tue, 19 Jan 2021 17:55:25 +0100
+Subject: [PATCH 4/8] Fix namespace syntax
+
+---
+ src/network/PeerTracker_TEST.cc | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/network/PeerTracker_TEST.cc b/src/network/PeerTracker_TEST.cc
+index 4435c8c26..f908839a4 100644
+--- a/src/network/PeerTracker_TEST.cc
++++ b/src/network/PeerTracker_TEST.cc
+@@ -286,7 +286,7 @@ TEST(PeerTracker, PartitionedEnv)
+   auto tracker1 = PeerTracker(
+       PeerInfo(NetworkRole::SimulationPrimary), &eventMgr);
+ 
+-  ignition::common:setenv("IGN_PARTITION", "p2");
++  ignition::common::setenv("IGN_PARTITION", "p2");
+   auto tracker2 = PeerTracker(
+       PeerInfo(NetworkRole::SimulationPrimary), &eventMgr);
+ 
+@@ -297,11 +297,11 @@ TEST(PeerTracker, PartitionedEnv)
+   EXPECT_EQ(0u, tracker1.NumPeers());
+   EXPECT_EQ(0u, tracker2.NumPeers());
+ 
+-  ignition::common:setenv("IGN_PARTITION", "p1");
++  ignition::common::setenv("IGN_PARTITION", "p1");
+   auto tracker3 = PeerTracker(
+       PeerInfo(NetworkRole::SimulationSecondary), &eventMgr);
+ 
+-  ignition::common:setenv("IGN_PARTITION", "p2");
++  ignition::common::setenv("IGN_PARTITION", "p2");
+   auto tracker4 = PeerTracker(
+       PeerInfo(NetworkRole::SimulationSecondary), &eventMgr);
+ 
+
+From af72cc5aebfa2deda446652056d1b12be8a44792 Mon Sep 17 00:00:00 2001
+From: Jose Luis Rivero <jrivero@osrfoundation.org>
+Date: Tue, 19 Jan 2021 17:56:49 +0100
+Subject: [PATCH 5/8] Alpha
+
+Signed-off-by: Jose Luis Rivero <jrivero@osrfoundation.org>
+---
+ test/integration/save_world.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/test/integration/save_world.cc b/test/integration/save_world.cc
+index 885ff8033..149ce5c3f 100644
+--- a/test/integration/save_world.cc
++++ b/test/integration/save_world.cc
+@@ -27,8 +27,8 @@
+ #include <sdf/World.hh>
+ 
+ #include <ignition/common/Console.hh>
+-#include <ignition/common/Util.hh>
+ #include <ignition/common/Filesystem.hh>
++#include <ignition/common/Util.hh>
+ #include <ignition/transport/Node.hh>
+ #include <ignition/utilities/ExtraTestMacros.hh>
+ 
+
+From d8a6c3dd873d896e4b469037f933f2d4073ddafd Mon Sep 17 00:00:00 2001
+From: Jose Luis Rivero <jrivero@osrfoundation.org>
+Date: Tue, 19 Jan 2021 18:04:08 +0100
+Subject: [PATCH 6/8] Make codecheck happy
+
+---
+ src/Util.cc | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/src/Util.cc b/src/Util.cc
+index 05595af83..d09d28f20 100644
+--- a/src/Util.cc
++++ b/src/Util.cc
+@@ -18,7 +18,7 @@
+ #ifndef __APPLE__
+   #if (defined(_MSVC_LANG))
+     #if (_MSVC_LANG >= 201703L || __cplusplus >= 201703L)
+-      #include <filesystem> //C++17
++      #include <filesystem>  // c++17
+     #else
+       #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
+       #include <experimental/filesystem>
+@@ -395,7 +395,8 @@ void addResourcePaths(const std::vector<std::string> &_paths)
+   for (const auto &path : ignPaths)
+     ignPathsStr += ':' + path;
+ 
+-  ignition::common::setenv(systemPaths->FilePathEnv().c_str(), ignPathsStr.c_str());
++  ignition::common::setenv(
++    systemPaths->FilePathEnv().c_str(), ignPathsStr.c_str());
+ 
+   std::string gzPathsStr;
+   for (const auto &path : gzPaths)
+
+From edd4ff57f220d1107e2f17cf62238bc11b9f9f9e Mon Sep 17 00:00:00 2001
+From: Jose Luis Rivero <jrivero@osrfoundation.org>
+Date: Tue, 19 Jan 2021 21:44:25 +0100
+Subject: [PATCH 7/8] Fix namespace in unsetenv
+
+Signed-off-by: Jose Luis Rivero <jrivero@osrfoundation.org>
+---
+ src/network/PeerTracker_TEST.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/network/PeerTracker_TEST.cc b/src/network/PeerTracker_TEST.cc
+index f908839a4..40b351b18 100644
+--- a/src/network/PeerTracker_TEST.cc
++++ b/src/network/PeerTracker_TEST.cc
+@@ -315,6 +315,6 @@ TEST(PeerTracker, PartitionedEnv)
+   EXPECT_EQ(1u, tracker3.NumPeers());
+   EXPECT_EQ(1u, tracker4.NumPeers());
+ 
+-  ignition::common:unsetenv("IGN_PARTITION");
++  ignition::common::unsetenv("IGN_PARTITION");
+ }
+ #endif
+
+From 12ca7f66296fe0a2a961172f528b71096400afd6 Mon Sep 17 00:00:00 2001
+From: Jose Luis Rivero <jrivero@osrfoundation.org>
+Date: Tue, 19 Jan 2021 23:56:00 +0100
+Subject: [PATCH 8/8] Fix tests failing due to change in return value
+
+---
+ test/integration/log_system.cc | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/test/integration/log_system.cc b/test/integration/log_system.cc
+index 935ab8830..a9bc0ea25 100644
+--- a/test/integration/log_system.cc
++++ b/test/integration/log_system.cc
+@@ -339,7 +339,7 @@ TEST_F(LogSystemTest, LogDefaults)
+   std::string homeOrig;
+   common::env(IGN_HOMEDIR, homeOrig);
+   std::string homeFake = common::joinPaths(this->logsDir, "default");
+-  EXPECT_EQ(ignition::common::setenv(IGN_HOMEDIR, homeFake.c_str()), 0);
++  EXPECT_TRUE(ignition::common::setenv(IGN_HOMEDIR, homeFake.c_str()));
+ 
+   // Test case 1:
+   // No path specified, on both command line and SDF. This does not go through
+@@ -423,7 +423,7 @@ TEST_F(LogSystemTest, LogDefaults)
+ #endif
+ 
+   // Revert environment variable after test is done
+-  EXPECT_EQ(ignition::common::setenv(IGN_HOMEDIR, homeOrig.c_str()), 0);
++  EXPECT_TRUE(ignition::common::setenv(IGN_HOMEDIR, homeOrig.c_str()));
+ }
+ 
+ /////////////////////////////////////////////////
+@@ -479,7 +479,7 @@ TEST_F(LogSystemTest, LogPaths)
+   std::string homeOrig;
+   common::env(IGN_HOMEDIR, homeOrig);
+   std::string homeFake = common::joinPaths(this->logsDir, "default");
+-  EXPECT_EQ(ignition::common::setenv(IGN_HOMEDIR, homeFake.c_str()), 0);
++  EXPECT_TRUE(ignition::common::setenv(IGN_HOMEDIR, homeFake.c_str()));
+ 
+   // Store number of files before running
+   auto logPath = common::joinPaths(homeFake.c_str(), ".ignition", "gazebo",
+@@ -692,7 +692,7 @@ TEST_F(LogSystemTest, LogPaths)
+ #endif
+ 
+   // Revert environment variable after test is done
+-  EXPECT_EQ(ignition::common::setenv(IGN_HOMEDIR, homeOrig.c_str()), 0);
++  EXPECT_TRUE(ignition::common::setenv(IGN_HOMEDIR, homeOrig.c_str()));
+ 
+   this->RemoveLogsDir();
+ }
+@@ -1569,7 +1569,7 @@ TEST_F(LogSystemTest, LogResources)
+   std::string homeOrig;
+   common::env(IGN_HOMEDIR, homeOrig);
+   std::string homeFake = common::joinPaths(this->logsDir, "default");
+-  EXPECT_EQ(ignition::common::setenv(IGN_HOMEDIR, homeFake.c_str()), 0);
++  EXPECT_TRUE(ignition::common::setenv(IGN_HOMEDIR, homeFake.c_str()));
+ 
+   const std::string recordPath = this->logDir;
+   std::string statePath = common::joinPaths(recordPath, "state.tlog");
+@@ -1634,7 +1634,7 @@ TEST_F(LogSystemTest, LogResources)
+       "models", "x2 config 1")));
+ 
+   // Revert environment variable after test is done
+-  EXPECT_EQ(ignition::common::setenv(IGN_HOMEDIR, homeOrig.c_str()), 0);
++  EXPECT_TRUE(ignition::common::setenv(IGN_HOMEDIR, homeOrig.c_str()));
+ 
+   // Remove artifacts
+   this->RemoveLogsDir();
+@@ -1656,7 +1656,7 @@ TEST_F(LogSystemTest, LogTopics)
+   std::string homeOrig;
+   common::env(IGN_HOMEDIR, homeOrig);
+   std::string homeFake = common::joinPaths(this->logsDir, "default");
+-  EXPECT_EQ(ignition::common::setenv(IGN_HOMEDIR, homeFake.c_str()), 0);
++  EXPECT_TRUE(ignition::common::setenv(IGN_HOMEDIR, homeFake.c_str()));
+ 
+   const std::string recordPath = this->logDir;
+   std::string statePath = common::joinPaths(recordPath, "state.tlog");
