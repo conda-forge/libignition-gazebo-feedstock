@@ -46,7 +46,7 @@ Current release info
 
 | Name | Downloads | Version | Platforms |
 | --- | --- | --- | --- |
-| [![Conda Recipe](https://img.shields.io/badge/recipe-libignition--gazebo4-green.svg)](https://anaconda.org/conda-forge/libignition-gazebo4) | [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/libignition-gazebo4.svg)](https://anaconda.org/conda-forge/libignition-gazebo4) | [![Conda Version](https://img.shields.io/conda/vn/conda-forge/libignition-gazebo4.svg)](https://anaconda.org/conda-forge/libignition-gazebo4) | [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/libignition-gazebo4.svg)](https://anaconda.org/conda-forge/libignition-gazebo4) |
+| [![Conda Recipe](https://img.shields.io/badge/recipe-libignition--gazebo5-green.svg)](https://anaconda.org/conda-forge/libignition-gazebo5) | [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/libignition-gazebo5.svg)](https://anaconda.org/conda-forge/libignition-gazebo5) | [![Conda Version](https://img.shields.io/conda/vn/conda-forge/libignition-gazebo5.svg)](https://anaconda.org/conda-forge/libignition-gazebo5) | [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/libignition-gazebo5.svg)](https://anaconda.org/conda-forge/libignition-gazebo5) |
 
 Installing libignition-gazebo
 =============================
@@ -57,16 +57,16 @@ Installing `libignition-gazebo` from the `conda-forge` channel can be achieved b
 conda config --add channels conda-forge
 ```
 
-Once the `conda-forge` channel has been enabled, `libignition-gazebo4` can be installed with:
+Once the `conda-forge` channel has been enabled, `libignition-gazebo5` can be installed with:
 
 ```
-conda install libignition-gazebo4
+conda install libignition-gazebo5
 ```
 
-It is possible to list all of the versions of `libignition-gazebo4` available on your platform with:
+It is possible to list all of the versions of `libignition-gazebo5` available on your platform with:
 
 ```
-conda search libignition-gazebo4 --channel conda-forge
+conda search libignition-gazebo5 --channel conda-forge
 ```
 
 
