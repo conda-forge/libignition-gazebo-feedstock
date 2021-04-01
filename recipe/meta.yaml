@@ -1,6 +1,6 @@
 {% set component_name = "gazebo" %}
 {% set base_name = "libignition-" + component_name %}
-{% set version = "4.6.0" %}
+{% set version = "5.0.0" %}
 {% set major_version = version.split('.')[0] %}
 {% set name = base_name + major_version %}
 
@@ -10,7 +10,7 @@ package:
 
 source:
   - url: https://github.com/ignitionrobotics/ign-{{ component_name }}/archive/ignition-{{ component_name }}{{ major_version }}_{{ version }}.tar.gz
-    sha256: 7a9664baacaeaba781d94cddec03534115c00cfe803ec64d89a04faa2e15a4b1
+    sha256: 8edb028efb1e61bcf25c10e1961a3575fee2af18334ed66ececc23151c49d42c
 
 build:
   number: 0
@@ -66,7 +66,7 @@ about:
   home: https://github.com/ignitionrobotics/ign-{{ component_name }}
   license: Apache-2.0
   license_file: LICENSE
-  summary: Open source robotics simulator. Through Ignition Gazebo users have access to high fidelity physics, rendering, and sensor models. Additionally, users and developers have multiple points of entry to simulation including a graphical user interface, plugins, and asynchronous message passing and services. 
+  summary: Open source robotics simulator. Through Ignition Gazebo users have access to high fidelity physics, rendering, and sensor models. Additionally, users and developers have multiple points of entry to simulation including a graphical user interface, plugins, and asynchronous message passing and services.
 
 extra:
   feedstock-name: {{ base_name }}
