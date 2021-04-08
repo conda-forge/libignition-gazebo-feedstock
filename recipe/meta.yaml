@@ -34,16 +34,16 @@ requirements:
     - {{ cdt('libxext') }}     # [linux]
   host:
     - libignition-cmake2
-    - libsdformat10
+    - libsdformat11
     - libignition-plugin1
-    - libignition-transport9
-    - libignition-msgs6
-    - libignition-common3
-    - libignition-fuel-tools5
-    - libignition-gui4
-    - libignition-physics3
-    - libignition-sensors4
-    - libignition-rendering4
+    - libignition-transport10
+    - libignition-msgs7
+    - libignition-common4
+    - libignition-fuel-tools6
+    - libignition-gui5
+    - libignition-physics4
+    - libignition-sensors5
+    - libignition-rendering5
     - libignition-math6
     - libignition-tools1
     - libprotobuf
