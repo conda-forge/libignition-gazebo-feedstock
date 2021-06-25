@@ -33,6 +33,13 @@ Current build status
                   <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/libignition-gazebo-feedstock?branchName=master&jobName=linux&configuration=linux_64_" alt="variant">
                 </a>
               </td>
+            </tr><tr>
+              <td>win_64</td>
+              <td>
+                <a href="https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=12295&branchName=master">
+                  <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/libignition-gazebo-feedstock?branchName=master&jobName=win&configuration=win_64_" alt="variant">
+                </a>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -55,6 +62,7 @@ Installing `libignition-gazebo` from the `conda-forge` channel can be achieved b
 
 ```
 conda config --add channels conda-forge
+conda config --set channel_priority strict
 ```
 
 Once the `conda-forge` channel has been enabled, `libignition-gazebo5` can be installed with:
