@@ -24,7 +24,7 @@ qt:
 target_platform:
 - linux-64
 tinyxml2:
-- '8'
+- '9'
 zip_keys:
 - - c_compiler_version
   - cxx_compiler_version
