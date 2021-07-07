@@ -1,5 +1,8 @@
 #!/bin/bash -e
 
+# First smoke test: just print Ignition Gazebo version
+ign gazebo --version 
+
 # Run ign-gazebo -s for few seconds
 timeout 2 ign gazebo -s &> ./ign_gazebo_s_out || true
 
