@@ -1,0 +1,12 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 442b94589..16ff3f827 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -131,6 +131,7 @@ ign_find_package(ignition-tools
+ #--------------------------------------
+ # Find protobuf
+ set(REQ_PROTOBUF_VER 3)
++set(protobuf_MODULE_COMPATIBLE TRUE)
+ ign_find_package(IgnProtobuf
+                  VERSION ${REQ_PROTOBUF_VER}
+                  REQUIRED
