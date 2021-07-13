@@ -11,9 +11,6 @@ package:
 source:
   - url: https://github.com/ignitionrobotics/ign-{{ component_name }}/archive/ignition-{{ component_name }}{{ major_version }}_{{ version }}.tar.gz
     sha256: be922096d17fd1ee63f5d06489f14003b6b21b93b94409e7331350ffa4da3589
-    patches:
-      - win_support_protobuf.patch
-      # - missing_optional_include.patch
 
 build:
   number: 2
