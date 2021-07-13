@@ -11,8 +11,8 @@ package:
 source:
   - url: https://github.com/ignitionrobotics/ign-{{ component_name }}/archive/ignition-{{ component_name }}{{ major_version }}_{{ version }}.tar.gz
     sha256: 74a093b93c6d9e4276ac5139ff5234800a604bff580f7c09bcd008646b8f02c9
-    patches:
-      - not-build-test-win.patch
+    # patches:
+    #   - not-build-test-win.patch
 
 build:
   number: 1
