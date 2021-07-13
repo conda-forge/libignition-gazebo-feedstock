@@ -1,0 +1,13 @@
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 9023a779e..cbd9dcce6 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -67,7 +67,7 @@ set (gtest_sources
+   Component_TEST.cc
+   ComponentFactory_TEST.cc
+   Conversions_TEST.cc
+-  EntityComponentManager_TEST.cc
++  # EntityComponentManager_TEST.cc
+   EventManager_TEST.cc
+   ign_TEST.cc
+   Link_TEST.cc
