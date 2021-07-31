@@ -1,19 +1,20 @@
 {% set component_name = "gazebo" %}
 {% set base_name = "libignition-" + component_name %}
-{% set version = "5.1.0" %}
-{% set major_version = version.split('.')[0] %}
+{% set version = "5_5.1.0" %}
+{% set version_package = version.split('_')[1] %}
+{% set major_version = version.split('_')[0] %}
 {% set name = base_name + major_version %}
 
 package:
   name: {{ name }}
-  version: {{ version }}
+  version: {{ version_package }}
 
 source:
-  - url: https://github.com/ignitionrobotics/ign-{{ component_name }}/archive/ignition-{{ component_name }}{{ major_version }}_{{ version }}.tar.gz
+  - url: https://github.com/ignitionrobotics/ign-{{ component_name }}/archive/ignition-{{ component_name }}{{ version }}.tar.gz
     sha256: 74a093b93c6d9e4276ac5139ff5234800a604bff580f7c09bcd008646b8f02c9
 
 build:
-  number: 2
+  number: 3
   skip: true  # [osx]
   run_exports:
     - {{ pin_subpackage(name, max_pin='x') }}
