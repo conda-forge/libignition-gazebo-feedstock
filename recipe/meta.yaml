@@ -7,7 +7,7 @@
 
 package:
   name: {{ name }}
-  version: {{ version }}
+  version: {{ version_package }}
 
 source:
   - url: https://github.com/ignitionrobotics/ign-{{ component_name }}/archive/ignition-{{ component_name }}{{ version }}.tar.gz
