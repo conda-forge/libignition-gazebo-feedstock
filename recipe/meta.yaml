@@ -14,8 +14,7 @@ source:
     sha256: 09456d491e715604daa36db0f30aa9fa7d96fc54f9b8b8c3f6d2a5aed377b9ce
 
 build:
-  number: 0
-  skip: true  # [osx]
+  number: 1
   run_exports:
     - {{ pin_subpackage(name, max_pin='x') }}
 
@@ -51,6 +50,8 @@ requirements:
     - qt
     - tinyxml2
     - xorg-libxfixes  # [linux]
+  run:
+    - __osx >={{ MACOSX_DEPLOYMENT_TARGET|default("10.9") }}  # [osx and x86_64]
 
 test:
   commands:
