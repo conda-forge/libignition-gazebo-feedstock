@@ -53,7 +53,7 @@ Current release info
 
 | Name | Downloads | Version | Platforms |
 | --- | --- | --- | --- |
-| [![Conda Recipe](https://img.shields.io/badge/recipe-libignition--gazebo5-green.svg)](https://anaconda.org/conda-forge/libignition-gazebo5) | [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/libignition-gazebo5.svg)](https://anaconda.org/conda-forge/libignition-gazebo5) | [![Conda Version](https://img.shields.io/conda/vn/conda-forge/libignition-gazebo5.svg)](https://anaconda.org/conda-forge/libignition-gazebo5) | [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/libignition-gazebo5.svg)](https://anaconda.org/conda-forge/libignition-gazebo5) |
+| [![Conda Recipe](https://img.shields.io/badge/recipe-libignition--gazebo6-green.svg)](https://anaconda.org/conda-forge/libignition-gazebo6) | [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/libignition-gazebo6.svg)](https://anaconda.org/conda-forge/libignition-gazebo6) | [![Conda Version](https://img.shields.io/conda/vn/conda-forge/libignition-gazebo6.svg)](https://anaconda.org/conda-forge/libignition-gazebo6) | [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/libignition-gazebo6.svg)](https://anaconda.org/conda-forge/libignition-gazebo6) |
 
 Installing libignition-gazebo
 =============================
@@ -65,16 +65,16 @@ conda config --add channels conda-forge
 conda config --set channel_priority strict
 ```
 
-Once the `conda-forge` channel has been enabled, `libignition-gazebo5` can be installed with:
+Once the `conda-forge` channel has been enabled, `libignition-gazebo6` can be installed with:
 
 ```
-conda install libignition-gazebo5
+conda install libignition-gazebo6
 ```
 
-It is possible to list all of the versions of `libignition-gazebo5` available on your platform with:
+It is possible to list all of the versions of `libignition-gazebo6` available on your platform with:
 
 ```
-conda search libignition-gazebo5 --channel conda-forge
+conda search libignition-gazebo6 --channel conda-forge
 ```
 
 
