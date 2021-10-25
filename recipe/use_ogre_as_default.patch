@@ -1,0 +1,77 @@
+From 9f3de2321c7c29b15a221c5122d1db5d86169b48 Mon Sep 17 00:00:00 2001
+From: Silvio Traversaro <silvio@traversaro.it>
+Date: Mon, 25 Oct 2021 16:23:44 +0200
+Subject: [PATCH] Switch default render engine to ogre
+
+---
+ src/cmd/cmdgazebo.rb.in        | 10 +++++-----
+ src/rendering/RenderUtil.cc    |  6 +++---
+ src/systems/sensors/Sensors.cc |  2 +-
+ 3 files changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/src/cmd/cmdgazebo.rb.in b/src/cmd/cmdgazebo.rb.in
+index dfb46fec7..a51d0e3ac 100755
+--- a/src/cmd/cmdgazebo.rb.in
++++ b/src/cmd/cmdgazebo.rb.in
+@@ -132,19 +132,19 @@ COMMANDS = { 'gazebo' =>
+   "\n"\
+   "  --render-engine [arg]        Ignition Rendering engine plugin to load for     \n"\
+   "                               both the server and the GUI. Gazebo will use     \n"\
+-  "                               OGRE2 by default. (ogre2)                        \n"\
++  "                               OGRE by default. (ogre)                          \n"\
+   "                               Make sure custom plugins are in                  \n"\
+   "                               IGN_GAZEBO_RENDER_ENGINE_PATH.                   \n"\
+   "\n"\
+   "  --render-engine-gui [arg]    Ignition Rendering engine plugin to load for     \n"\
+-  "                               the GUI. Gazebo will use OGRE2 by default.       \n"\
+-  "                               (ogre2)                                          \n"\
++  "                               the GUI. Gazebo will use OGRE by default.        \n"\
++  "                               (ogre)                                           \n"\
+   "                               Make sure custom plugins are in                  \n"\
+   "                               IGN_GAZEBO_RENDER_ENGINE_PATH.                   \n"\
+   "\n"\
+   "  --render-engine-server [arg] Ignition Rendering engine plugin to load for     \n"\
+-  "                               the server. Gazebo will use OGRE2 by default.    \n"\
+-  "                               (ogre2)                                          \n"\
++  "                               the server. Gazebo will use OGRE by default.     \n"\
++  "                               (ogre)                                           \n"\
+   "                               Make sure custom plugins are in                  \n"\
+   "                               IGN_GAZEBO_RENDER_ENGINE_PATH.                   \n"\
+   "\n"\
+diff --git a/src/rendering/RenderUtil.cc b/src/rendering/RenderUtil.cc
+index 1ea5640e7..41b27a5f7 100644
+--- a/src/rendering/RenderUtil.cc
++++ b/src/rendering/RenderUtil.cc
+@@ -150,7 +150,7 @@ class ignition::gazebo::RenderUtilPrivate
+   public: std::chrono::steady_clock::duration simTime{0};
+ 
+   /// \brief Name of rendering engine
+-  public: std::string engineName = "ogre2";
++  public: std::string engineName = "ogre";
+ 
+   /// \brief Name of scene
+   public: std::string sceneName = "scene";
+@@ -2416,8 +2416,8 @@ void RenderUtil::Init()
+   if (!this->dataPtr->engine)
+   {
+     ignerr << "Engine [" << this->dataPtr->engineName << "] is not supported. "
+-           << "Loading OGRE2 instead." << std::endl;
+-    this->dataPtr->engine = rendering::engine("ogre2", params);
++           << "Loading OGRE instead." << std::endl;
++    this->dataPtr->engine = rendering::engine("ogre", params);
+   }
+ 
+   // Scene
+diff --git a/src/systems/sensors/Sensors.cc b/src/systems/sensors/Sensors.cc
+index 9f5b0f434..7256770aa 100644
+--- a/src/systems/sensors/Sensors.cc
++++ b/src/systems/sensors/Sensors.cc
+@@ -387,7 +387,7 @@ void Sensors::Configure(const Entity &/*_id*/,
+   igndbg << "Configuring Sensors system" << std::endl;
+   // Setup rendering
+   std::string engineName =
+-      _sdf->Get<std::string>("render_engine", "ogre2").first;
++      _sdf->Get<std::string>("render_engine", "ogre").first;
+ 
+   this->dataPtr->renderUtil.SetEngineName(engineName);
+   this->dataPtr->renderUtil.SetEnableSensors(true,
