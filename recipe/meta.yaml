@@ -1,6 +1,6 @@
 {% set component_name = "gazebo" %}
 {% set base_name = "libignition-" + component_name %}
-{% set version = "6_6.0.0" %}
+{% set version = "6_6.1.0" %}
 {% set version_package = version.split('_')[1] %}
 {% set major_version = version.split('_')[0] %}
 {% set name = base_name + major_version %}
@@ -11,12 +11,12 @@ package:
 
 source:
   - url: https://github.com/ignitionrobotics/ign-{{ component_name }}/archive/ignition-{{ component_name }}{{ version }}.tar.gz
-    sha256: 09456d491e715604daa36db0f30aa9fa7d96fc54f9b8b8c3f6d2a5aed377b9ce
+    sha256: 29e092e5ebb1a156ef7d0ef4a3dd883346566d2c07ca03634dd3fff8ecfe4405
     patches:
       - use_ogre_as_default.patch
 
 build:
-  number: 2
+  number: 0
   run_exports:
     - {{ pin_subpackage(name, max_pin='x') }}
 
