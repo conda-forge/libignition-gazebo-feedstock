@@ -11,7 +11,7 @@ package:
 
 source:
   - url: https://github.com/ignitionrobotics/ign-{{ component_name }}/archive/ignition-{{ component_name }}{{ version }}.tar.gz
-    sha256: 09456d491e715604daa36db0f30aa9fa7d96fc54f9b8b8c3f6d2a5aed377b9ce
+    sha256: 29e092e5ebb1a156ef7d0ef4a3dd883346566d2c07ca03634dd3fff8ecfe4405
     patches:
       - use_ogre_as_default.patch
 
