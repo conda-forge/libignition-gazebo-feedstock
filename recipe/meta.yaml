@@ -24,6 +24,7 @@ requirements:
   build:
     - {{ compiler('cxx') }}
     - {{ compiler('c') }}
+    - clang  # [win]
     - make  # [not win]
     - cmake
     - pkg-config
