@@ -1,6 +1,6 @@
-:: MSVC is preferred.
-set CC=cl.exe
-set CXX=cl.exe
+:: clang-cl is preferred.
+set CC=clang-cl.exe
+set CXX=clang-cl.exe
 
 mkdir build
 cd build
