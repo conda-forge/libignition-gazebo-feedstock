@@ -16,7 +16,7 @@ source:
       - use_ogre_as_default.patch
 
 build:
-  number: 2
+  number: 3
   run_exports:
     - {{ pin_subpackage(name, max_pin='x') }}
 
@@ -49,7 +49,7 @@ requirements:
     - libignition-math6
     - libignition-tools1
     - libprotobuf
-    - qt
+    - qt-main
     - tinyxml2
     - xorg-libxfixes  # [linux]
   run:
