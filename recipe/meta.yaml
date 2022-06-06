@@ -11,12 +11,12 @@ package:
 
 source:
   - url: https://github.com/ignitionrobotics/ign-{{ component_name }}/archive/ignition-{{ component_name }}{{ version }}.tar.gz
-    sha256: 29e092e5ebb1a156ef7d0ef4a3dd883346566d2c07ca03634dd3fff8ecfe4405
+    sha256: 4ffa428a2248bd04e0dc8b0f65d656fe01e215f00f5af77c5f5d965470b85e51
     patches:
       - use_ogre_as_default.patch
 
 build:
-  number: 2
+  number: 3
   run_exports:
     - {{ pin_subpackage(name, max_pin='x') }}
 
