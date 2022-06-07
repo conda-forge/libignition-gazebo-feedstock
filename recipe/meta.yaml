@@ -34,6 +34,8 @@ requirements:
     - {{ cdt('libxdamage') }}  # [linux]
     - {{ cdt('libxxf86vm') }}  # [linux]
     - {{ cdt('libxext') }}     # [linux]
+    # We need protoc in build for cross-compiling
+    - libprotobuf  # [build_platform != target_platform]
   host:
     - libignition-cmake2
     - libsdformat12
