@@ -1,6 +1,6 @@
 {% set component_name = "gazebo" %}
 {% set base_name = "libignition-" + component_name %}
-{% set version = "6_6.1.0" %}
+{% set version = "6_6.10.0" %}
 {% set version_package = version.split('_')[1] %}
 {% set major_version = version.split('_')[0] %}
 {% set name = base_name + major_version %}
