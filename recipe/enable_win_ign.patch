@@ -1,0 +1,23 @@
+From bfbff0e0163c37fe825d73c4cd0dd470bce1cdb4 Mon Sep 17 00:00:00 2001
+From: Silvio Traversaro <silvio.traversaro@iit.it>
+Date: Sun, 3 Jul 2022 19:43:31 +0200
+Subject: [PATCH] Install ignition-tools files also on Windows
+
+Signed-off-by: Silvio <silvio@traversaro.it>
+---
+ src/CMakeLists.txt | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index ff178007c..fd606033a 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -224,7 +224,4 @@ foreach(CMD_TEST
+ 
+ endforeach()
+ 
+-if(NOT WIN32)
+-  add_subdirectory(cmd)
+-endif()
+-
++add_subdirectory(cmd)
