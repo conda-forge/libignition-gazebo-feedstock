@@ -119,7 +119,7 @@ index 11e7ef7e00..e81a98be44 100644
 -set(cmd_model_script_configured "${cmd_model_script_generated}.configured")
 +set(cmd_model_script_name "cmdmodel${PROJECT_VERSION_MAJOR}.rb")
 +set(cmd_model_script_generated "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>_${cmd_model_script_name}")
-+set(cmd_model_script_configured "${CMAKE_CURRENT_BINARY_DIR}/${cmd_script_name}.configured")
++set(cmd_model_script_configured "${CMAKE_CURRENT_BINARY_DIR}/${cmd_model_script_name}.configured")
  
  configure_file(
    "cmdmodel.rb.in"
