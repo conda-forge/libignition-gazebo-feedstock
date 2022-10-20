@@ -28,6 +28,7 @@ requirements:
     - cmake
     - pkg-config
     - ninja  # [win]
+    - multisheller  # [win]
     - {{ cdt('mesa-libgl-devel') }}  # [linux]
     - {{ cdt('mesa-dri-drivers') }}  # [linux]
     - {{ cdt('libselinux') }}  # [linux]
