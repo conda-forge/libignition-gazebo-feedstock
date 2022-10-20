@@ -1,23 +1,467 @@
-From bfbff0e0163c37fe825d73c4cd0dd470bce1cdb4 Mon Sep 17 00:00:00 2001
-From: Silvio Traversaro <silvio.traversaro@iit.it>
-Date: Sun, 3 Jul 2022 19:43:31 +0200
-Subject: [PATCH] Install ignition-tools files also on Windows
+From 7dc7dd4773f595ccc27f9eba5f21dc674065a49c Mon Sep 17 00:00:00 2001
+From: Silvio <silvio@traversaro.it>
+Date: Tue, 5 Jul 2022 21:10:16 +0200
+Subject: [PATCH] Enable use of ign gazebo -s on Windows
 
 Signed-off-by: Silvio <silvio@traversaro.it>
 ---
- src/CMakeLists.txt | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ src/CMakeLists.txt         |  32 ++++++++--
+ src/cmd/CMakeLists.txt     | 121 +++++++++++++++++++++----------------
+ src/cmd/ModelCommandAPI.hh |   6 +-
+ src/cmd/cmdgazebo.rb.in    |  16 ++++-
+ src/cmd/cmdmodel.rb.in     |   4 +-
+ src/ign.hh                 |  16 ++---
+ src/ign_TEST.cc            |  13 ++--
+ src/systems/CMakeLists.txt |   7 +--
+ 8 files changed, 136 insertions(+), 79 deletions(-)
 
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index ff178007c..fd606033a 100644
+index ff178007c3..7acb368963 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
-@@ -224,7 +224,4 @@ foreach(CMD_TEST
+@@ -92,7 +92,6 @@ set (gtest_sources
+   TestFixture_TEST.cc
+   Util_TEST.cc
+   World_TEST.cc
+-  ign_TEST.cc
+   comms/Broker_TEST.cc
+   comms/MsgManager_TEST.cc
+   network/NetworkConfig_TEST.cc
+@@ -100,11 +99,22 @@ set (gtest_sources
+   network/NetworkManager_TEST.cc
+ )
  
- endforeach()
++# ign_TEST and ModelCommandAPI_TEST are not supported with multi config
++# CMake generators, see also cmd/CMakeLists.txt
++get_property(GENERATOR_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
++if(NOT GENERATOR_IS_MULTI_CONFIG)
++  list(APPEND gtest_sources ign_TEST.cc)
++endif()
++
++
+ # Tests that require a valid display
+ set(tests_needing_display
+-  ModelCommandAPI_TEST.cc
+ )
+ 
++if(NOT GENERATOR_IS_MULTI_CONFIG)
++  list(APPEND tests_needing_display ModelCommandAPI_TEST.cc)
++endif()
++
+ # Add systems that need a valid display here.
+ # \todo(anyone) Find a way to run these tests with a virtual display such Xvfb
+ # or Xdummy instead of skipping them
+@@ -222,9 +232,19 @@ foreach(CMD_TEST
+   set_tests_properties(${CMD_TEST} PROPERTIES
+     ENVIRONMENT "${_env_vars}")
+ 
+-endforeach()
++  # On Windows there is no RPATH, so an alternative way for tests for finding .dll libraries
++  # in build directory in necessary. For regular tests, the trick is to place all libraries
++  # and executables in a common CMAKE_RUNTIME_OUTPUT_DIRECTORY, so that the .dll are found
++  # as they are in the same directory where the executable is loaded. For tests that are
++  # launched via ruby, this does not work, so we need to manually add CMAKE_RUNTIME_OUTPUT_DIRECTORY
++  # to the PATH. This is done via the ENVIRONMENT_MODIFICATION that is only available
++  # since CMake 3.22 . However, if an older CMake is used another trick to install the libraries
++  # beforehand
++  if (WIN32 AND CMAKE_VERSION STRGREATER "3.22")
++    set_tests_properties(${CMD_TEST} PROPERTIES
++      ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
++  endif()
  
 -if(NOT WIN32)
 -  add_subdirectory(cmd)
 -endif()
--
++endforeach()
+ 
 +add_subdirectory(cmd)
+diff --git a/src/cmd/CMakeLists.txt b/src/cmd/CMakeLists.txt
+index 11e7ef7e00..e81a98be44 100644
+--- a/src/cmd/CMakeLists.txt
++++ b/src/cmd/CMakeLists.txt
+@@ -2,12 +2,19 @@
+ # Generate the ruby script.
+ # Note that the major version of the library is included in the name.
+ # Ex: cmdgazebo0.rb
+-set(cmd_script_generated "${CMAKE_CURRENT_BINARY_DIR}/cmd${IGN_DESIGNATION}${PROJECT_VERSION_MAJOR}.rb")
+-set(cmd_script_configured "${cmd_script_generated}.configured")
++set(cmd_script_name "cmd${IGN_DESIGNATION}${PROJECT_VERSION_MAJOR}.rb")
++set(cmd_script_generated "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>_${cmd_script_name}")
++set(cmd_script_configured "${CMAKE_CURRENT_BINARY_DIR}/${cmd_script_name}.configured")
+ 
+ # Set the library_location variable to the relative path to the library file
+ # within the install directory structure.
+-set(library_location "../../../${CMAKE_INSTALL_LIBDIR}/$<TARGET_FILE_NAME:${ign_lib_target}>")
++if(WIN32)
++  set(plugin_location ${CMAKE_INSTALL_BINDIR})
++else()
++  set(plugin_location ${CMAKE_INSTALL_LIBDIR})
++endif()
++
++set(library_location "../../../${plugin_location}/$<TARGET_FILE_NAME:${ign_lib_target}>")
+ 
+ configure_file(
+   "cmd${IGN_DESIGNATION}.rb.in"
+@@ -19,7 +26,7 @@ file(GENERATE
+   INPUT  "${cmd_script_configured}")
+ 
+ # Install the ruby command line library in an unversioned location.
+-install(FILES ${cmd_script_generated} DESTINATION lib/ruby/ignition)
++install(FILES ${cmd_script_generated} DESTINATION lib/ruby/ignition RENAME ${cmd_script_name})
+ 
+ set(ign_library_path "${CMAKE_INSTALL_PREFIX}/lib/ruby/ignition/cmd${IGN_DESIGNATION}${PROJECT_VERSION_MAJOR}")
+ 
+@@ -40,8 +47,9 @@ install( FILES
+ # Used for the installed model command version.
+ # Generate the ruby script that gets installed.
+ # Note that the major version of the library is included in the name.
+-set(cmd_model_script_generated "${CMAKE_CURRENT_BINARY_DIR}/cmdmodel${PROJECT_VERSION_MAJOR}.rb")
+-set(cmd_model_script_configured "${cmd_model_script_generated}.configured")
++set(cmd_model_script_name "cmdmodel${PROJECT_VERSION_MAJOR}.rb")
++set(cmd_model_script_generated "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>_${cmd_model_script_name}")
++set(cmd_model_script_configured "${CMAKE_CURRENT_BINARY_DIR}/${cmd_model_script_name}.configured")
+ 
+ configure_file(
+   "cmdmodel.rb.in"
+@@ -51,7 +59,7 @@ file(GENERATE
+   OUTPUT "${cmd_model_script_generated}"
+   INPUT  "${cmd_model_script_configured}")
+ 
+-install(FILES ${cmd_model_script_generated} DESTINATION lib/ruby/ignition)
++install(FILES ${cmd_model_script_generated} DESTINATION lib/ruby/ignition RENAME ${cmd_model_script_name})
+ 
+ # Used for the installed version.
+ set(ign_model_ruby_path "${CMAKE_INSTALL_PREFIX}/lib/ruby/ignition/cmdmodel${PROJECT_VERSION_MAJOR}")
+@@ -68,55 +76,64 @@ install(FILES ${model_configured} DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_IN
+ # Generate the ruby script for internal testing.
+ # Note that the major version of the library is included in the name.
+ # Ex: cmdgazebo0.rb
+-set(cmd_script_generated_test "${CMAKE_BINARY_DIR}/test/lib/ruby/ignition/cmd${IGN_DESIGNATION}${PROJECT_VERSION_MAJOR}.rb")
+-set(cmd_script_configured_test "${cmd_script_generated_test}.configured")
+-
+-# Set the library_location variable to the relative path to the library file
+-# within the install directory structure.
+-set(library_location "$<TARGET_FILE:${ign_lib_target}>")
+-
+-configure_file(
+-  "cmd${IGN_DESIGNATION}.rb.in"
+-  "${cmd_script_configured_test}"
+-  @ONLY)
+-
+-file(GENERATE
+-  OUTPUT "${cmd_script_generated_test}"
+-  INPUT  "${cmd_script_configured_test}")
+-
+-# Used only for internal testing.
+-set(ign_library_path
+-  "${CMAKE_BINARY_DIR}/test/lib/ruby/ignition/cmd${IGN_DESIGNATION}${PROJECT_VERSION_MAJOR}")
+-
+-# Generate a configuration file for internal testing.
+-# Note that the major version of the library is included in the name.
+-# Ex: gazebo0.yaml
+-configure_file(
+-  "${IGN_DESIGNATION}.yaml.in"
+-  "${CMAKE_BINARY_DIR}/test/conf/${IGN_DESIGNATION}${PROJECT_VERSION_MAJOR}.yaml" @ONLY)
++# The logic is valid only for single-config CMake generators, so no script is
++# generated if a multiple-config CMake geneator is used
++get_property(GENERATOR_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
++if(NOT GENERATOR_IS_MULTI_CONFIG)
++  set(cmd_script_generated_test "${CMAKE_BINARY_DIR}/test/lib/ruby/ignition/cmd${IGN_DESIGNATION}${PROJECT_VERSION_MAJOR}.rb")
++  set(cmd_script_configured_test "${cmd_script_generated_test}.configured")
++
++  # Set the library_location variable to the relative path to the library file
++  # within the install directory structure.
++  set(library_location "$<TARGET_FILE:${ign_lib_target}>")
++
++  configure_file(
++    "cmd${IGN_DESIGNATION}.rb.in"
++    "${cmd_script_configured_test}"
++    @ONLY)
++
++  file(GENERATE
++    OUTPUT "${cmd_script_generated_test}"
++    INPUT  "${cmd_script_configured_test}")
++
++  # Used only for internal testing.
++  set(ign_library_path
++    "${CMAKE_BINARY_DIR}/test/lib/ruby/ignition/cmd${IGN_DESIGNATION}${PROJECT_VERSION_MAJOR}")
++
++  # Generate a configuration file for internal testing.
++  # Note that the major version of the library is included in the name.
++  # Ex: gazebo0.yaml
++  configure_file(
++    "${IGN_DESIGNATION}.yaml.in"
++    "${CMAKE_BINARY_DIR}/test/conf/${IGN_DESIGNATION}${PROJECT_VERSION_MAJOR}.yaml" @ONLY)
++endif()
+ 
+ #===============================================================================
+ # Generate the ruby script for internal testing.
+ # Note that the major version of the library is included in the name.
+-set(cmd_model_ruby_test_dir "${CMAKE_BINARY_DIR}/test/lib/ruby/ignition")
+-set(cmd_model_script_generated_test "${cmd_model_ruby_test_dir}/cmdmodel${PROJECT_VERSION_MAJOR}.rb")
+-set(cmd_model_script_configured_test "${cmd_model_script_generated_test}.configured")
+-
+-configure_file(
+-  "cmdmodel.rb.in"
+-  "${cmd_model_script_configured_test}"
+-  @ONLY)
+-
+-file(GENERATE
+-  OUTPUT "${cmd_model_script_generated_test}"
+-  INPUT  "${cmd_model_script_configured_test}")
+-
+-# Used for internal testing.
+-set(ign_model_ruby_path "${cmd_model_script_generated_test}")
+-
+-configure_file(
+-  "model.yaml.in"
+-  "${CMAKE_BINARY_DIR}/test/conf/model${PROJECT_VERSION_MAJOR}.yaml" @ONLY)
++# The logic is valid only for single-config CMake generators, so no script is
++# generated if a multiple-config CMake geneator is used
++if(NOT GENERATOR_IS_MULTI_CONFIG)
++  set(cmd_model_ruby_test_dir "${CMAKE_BINARY_DIR}/test/lib/ruby/ignition")
++  set(cmd_model_script_generated_test "${cmd_model_ruby_test_dir}/cmdmodel${PROJECT_VERSION_MAJOR}.rb")
++  set(cmd_model_script_configured_test "${cmd_model_script_generated_test}.configured")
++
++  configure_file(
++    "cmdmodel.rb.in"
++    "${cmd_model_script_configured_test}"
++    @ONLY)
++
++  file(GENERATE
++    OUTPUT "${cmd_model_script_generated_test}"
++    INPUT  "${cmd_model_script_configured_test}")
++
++  # Used for internal testing.
++  set(ign_model_ruby_path "${cmd_model_script_generated_test}")
++
++  configure_file(
++    "model.yaml.in"
++    "${CMAKE_BINARY_DIR}/test/conf/model${PROJECT_VERSION_MAJOR}.yaml" @ONLY)
++endif()
+ 
+ #===============================================================================
+ # Bash completion
+diff --git a/src/cmd/ModelCommandAPI.hh b/src/cmd/ModelCommandAPI.hh
+index 2ca7248c60..c941936471 100644
+--- a/src/cmd/ModelCommandAPI.hh
++++ b/src/cmd/ModelCommandAPI.hh
+@@ -15,8 +15,10 @@
+  *
+ */
+ 
++#include "ignition/gazebo/Export.hh"
++
+ /// \brief External hook to get a list of available models.
+-extern "C" void cmdModelList();
++extern "C" IGNITION_GAZEBO_VISIBLE void cmdModelList();
+ 
+ /// \brief External hook to dump model information.
+ /// \param[in] _modelName Model name.
+@@ -24,7 +26,7 @@ extern "C" void cmdModelList();
+ /// \param[in] _linkName Link name.
+ /// \param[in] _jointName Joint name.
+ /// \param[in] _sensorName Sensor name.
+-extern "C" void cmdModelInfo(
++extern "C" IGNITION_GAZEBO_VISIBLE void cmdModelInfo(
+     const char *_modelName, int _pose, const char *_linkName,
+     const char *_jointName,
+     const char *_sensorName);
+diff --git a/src/cmd/cmdgazebo.rb.in b/src/cmd/cmdgazebo.rb.in
+index 16ee5e1cac..023843ce1d 100755
+--- a/src/cmd/cmdgazebo.rb.in
++++ b/src/cmd/cmdgazebo.rb.in
+@@ -27,6 +27,7 @@ end
+ 
+ require 'optparse'
+ require 'erb'
++require 'pathname'
+ 
+ # Constants.
+ LIBRARY_NAME = '@library_location@'
+@@ -337,7 +338,8 @@ class Cmd
+   def execute(args)
+     options = parse(args)
+ 
+-    if LIBRARY_NAME[0] == '/'
++    library_name_path = Pathname.new(LIBRARY_NAME)
++    if library_name_path.absolute?
+       # If the first character is a slash, we'll assume that we've been given an
+       # absolute path to the library. This is only used during test mode.
+       plugin = LIBRARY_NAME
+@@ -467,6 +469,12 @@ See https://github.com/ignitionrobotics/ign-gazebo/issues/44 for more info."
+           exit(-1)
+         end
+ 
++        if plugin.end_with? ".dll"
++          puts "`ign gazebo` currently only works with the -s argument on Windows.
++See https://github.com/gazebosim/gz-sim/issues/168 for more info."
++          exit(-1)
++        end
++
+         serverPid = Process.fork do
+           ENV['RMT_PORT'] = '1500'
+           Process.setpgid(0, 0)
+@@ -526,6 +534,12 @@ See https://github.com/ignitionrobotics/ign-gazebo/issues/44 for more info."
+           exit(-1)
+         end
+ 
++        if plugin.end_with? ".dll"
++          puts "`ign gazebo` currently only works with the -s argument on Windows.
++See https://github.com/gazebosim/gz-sim/issues/168 for more info."
++          exit(-1)
++        end
++
+         ENV['RMT_PORT'] = '1501'
+         Importer.runGui(options['gui_config'], options['file'],
+             options['wait_gui'], options['render_engine_gui'])
+diff --git a/src/cmd/cmdmodel.rb.in b/src/cmd/cmdmodel.rb.in
+index 88e65a50f3..e49eb30749 100644
+--- a/src/cmd/cmdmodel.rb.in
++++ b/src/cmd/cmdmodel.rb.in
+@@ -26,6 +26,7 @@ else
+ end
+ 
+ require 'optparse'
++require 'pathname'
+ 
+ # Constants.
+ LIBRARY_NAME = '@library_location@'
+@@ -157,7 +158,8 @@ class Cmd
+     options = parse(args)
+ 
+     # Read the plugin that handles the command.
+-    if LIBRARY_NAME[0] == '/'
++    library_name_path = Pathname.new(LIBRARY_NAME)
++    if library_name_path.absolute?
+       # If the first character is a slash, we'll assume that we've been given an
+       # absolute path to the library. This is only used during test mode.
+       plugin = LIBRARY_NAME
+diff --git a/src/ign.hh b/src/ign.hh
+index 38de2a88e6..18eac3cfc5 100644
+--- a/src/ign.hh
++++ b/src/ign.hh
+@@ -21,18 +21,18 @@
+ 
+ /// \brief External hook to read the library version.
+ /// \return C-string representing the version. Ex.: 0.1.2
+-extern "C" char *ignitionGazeboVersion();
++extern "C" IGNITION_GAZEBO_VISIBLE char *ignitionGazeboVersion();
+ 
+ /// \brief Get the Gazebo version header.
+ /// \return C-string containing the Gazebo version information.
+-extern "C" char *gazeboVersionHeader();
++extern "C" IGNITION_GAZEBO_VISIBLE char *gazeboVersionHeader();
+ 
+ /// \brief Set verbosity level
+ /// \param[in] _verbosity 0 to 4
+-extern "C" void cmdVerbosity(
++extern "C" IGNITION_GAZEBO_VISIBLE void cmdVerbosity(
+     const char *_verbosity);
+ 
+-extern "C" const char *worldInstallDir();
++extern "C" IGNITION_GAZEBO_VISIBLE const char *worldInstallDir();
+ 
+ /// \brief External hook to run simulation server.
+ /// \param[in] _sdfString SDF file to run, as a string.
+@@ -59,7 +59,7 @@ extern "C" const char *worldInstallDir();
+ /// \param[in] _headless True if server rendering should run headless
+ /// \param[in] _recordPeriod --record-period option
+ /// \return 0 if successful, 1 if not.
+-extern "C" int runServer(const char *_sdfString,
++extern "C" IGNITION_GAZEBO_VISIBLE int runServer(const char *_sdfString,
+     int _iterations, int _run, float _hz, int _levels,
+     const char *_networkRole, int _networkSecondaries, int _record,
+     const char *_recordPath, int _recordResources, int _logOverwrite,
+@@ -77,14 +77,14 @@ extern "C" int runServer(const char *_sdfString,
+ /// it receives a world path from GUI.
+ /// \param[in] _renderEngine --render-engine-gui option
+ /// \return 0 if successful, 1 if not.
+-extern "C" int runGui(const char *_guiConfig, const char *_file, int _waitGui,
+-    const char *_renderEngine);
++extern "C" IGNITION_GAZEBO_VISIBLE int runGui(const char *_guiConfig,
++    const char *_file, int _waitGui, const char *_renderEngine);
+ 
+ /// \brief External hook to find or download a fuel world provided a URL.
+ /// \param[in] _pathToResource Path to the fuel world resource, ie,
+ /// https://staging-fuel.ignitionrobotics.org/1.0/gmas/worlds/ShapesClone
+ /// \return C-string containing the path to the local world sdf file
+-extern "C" const char *findFuelResource(
++extern "C" IGNITION_GAZEBO_VISIBLE const char *findFuelResource(
+     char *_pathToResource);
+ 
+ #endif
+diff --git a/src/ign_TEST.cc b/src/ign_TEST.cc
+index fbf01162bf..397441bed4 100644
+--- a/src/ign_TEST.cc
++++ b/src/ign_TEST.cc
+@@ -59,8 +59,7 @@ std::string customExecStr(std::string _cmd)
+ }
+ 
+ /////////////////////////////////////////////////
+-// See https://github.com/ignitionrobotics/ign-gazebo/issues/1175
+-TEST(CmdLine, IGN_UTILS_TEST_DISABLED_ON_WIN32(Server))
++TEST(CmdLine, Server)
+ {
+   std::string cmd = kIgnCommand + " -r -v 4 --iterations 5 " +
+     std::string(PROJECT_SOURCE_PATH) + "/test/worlds/plugins.sdf";
+@@ -75,6 +74,9 @@ TEST(CmdLine, IGN_UTILS_TEST_DISABLED_ON_WIN32(Server))
+         << output;
+   }
+ 
++// Disable on WIN32 as on Windows it is not support to prepend
++// a command with the env variable to set
++#ifndef _WIN32
+   // Use IGN_GAZEBO_RESOURCE_PATH instead of specifying the complete path
+   cmd = std::string("IGN_GAZEBO_RESOURCE_PATH=") +
+     PROJECT_SOURCE_PATH + "/test/worlds " + kIgnCommand +
+@@ -89,10 +91,11 @@ TEST(CmdLine, IGN_UTILS_TEST_DISABLED_ON_WIN32(Server))
+     EXPECT_NE(output.find("iteration " + std::to_string(i)), std::string::npos)
+         << output;
+   }
++#endif
+ }
+ 
+ /////////////////////////////////////////////////
+-TEST(CmdLine, IGN_UTILS_TEST_DISABLED_ON_WIN32(CachedFuelWorld))
++TEST(CmdLine, CachedFuelWorld)
+ {
+   std::string projectPath = std::string(PROJECT_SOURCE_PATH) + "/test/worlds";
+   ignition::common::setenv("IGN_FUEL_CACHE_PATH", projectPath.c_str());
+@@ -106,7 +109,7 @@ TEST(CmdLine, IGN_UTILS_TEST_DISABLED_ON_WIN32(CachedFuelWorld))
+ }
+ 
+ /////////////////////////////////////////////////
+-TEST(CmdLine, IGN_UTILS_TEST_DISABLED_ON_WIN32(GazeboServer))
++TEST(CmdLine, GazeboServer)
+ {
+   std::string cmd = kIgnCommand + " -r -v 4 --iterations 5 " +
+     std::string(PROJECT_SOURCE_PATH) + "/test/worlds/plugins.sdf";
+@@ -123,7 +126,7 @@ TEST(CmdLine, IGN_UTILS_TEST_DISABLED_ON_WIN32(GazeboServer))
+ }
+ 
+ /////////////////////////////////////////////////
+-TEST(CmdLine, IGN_UTILS_TEST_DISABLED_ON_WIN32(Gazebo))
++TEST(CmdLine, Gazebo)
+ {
+   std::string cmd = kIgnCommand + " -r -v 4 --iterations 5 " +
+     std::string(PROJECT_SOURCE_PATH) + "/test/worlds/plugins.sdf";
+diff --git a/src/systems/CMakeLists.txt b/src/systems/CMakeLists.txt
+index 303c6fc7d9..330b267f25 100644
+--- a/src/systems/CMakeLists.txt
++++ b/src/systems/CMakeLists.txt
+@@ -82,10 +82,9 @@ function(gz_add_system system_name)
+   set(unversioned ${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME_NO_VERSION_LOWER}-${system_name}${CMAKE_SHARED_LIBRARY_SUFFIX})
+   if(WIN32)
+     # symlinks on Windows require admin priviledges, fallback to copy
+-    ADD_CUSTOM_COMMAND(TARGET ${system_target} POST_BUILD
+-      COMMAND "${CMAKE_COMMAND}" -E copy
+-        "$<TARGET_FILE:${system_target}>"
+-        "$<TARGET_FILE_DIR:${system_target}>/${unversioned}")
++    INSTALL(CODE "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy
++      ${IGNITION_GAZEBO_PLUGIN_INSTALL_DIR}\/${versioned}
++      ${IGNITION_GAZEBO_PLUGIN_INSTALL_DIR}\/${unversioned})")
+   else()
+     file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
+     EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E create_symlink ${versioned} ${unversioned} WORKING_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
+
