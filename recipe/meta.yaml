@@ -14,6 +14,7 @@ source:
     sha256: 0c5036976b4811f18f3ea657ea3a738784e948449504f0a52b32bd7da9d7fe79
     patches:  # [win]
       - enable_win_ign.patch  # [win]
+      - 2006.patch
 
 build:
   number: 2
