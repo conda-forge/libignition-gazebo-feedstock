@@ -15,6 +15,7 @@ source:
     patches:
       - enable_win_ign.patch  # [win]
       - 2006.patch
+      - support_protobuf_crosscompilation.patch
 
 build:
   number: 2
