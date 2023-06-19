@@ -1,0 +1,15 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 6453a20d7e..1f419790e8 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -271,3 +271,10 @@ endif()
+ if(TARGET doc)
+   file(COPY ${CMAKE_SOURCE_DIR}/tutorials/files/ DESTINATION ${CMAKE_BINARY_DIR}/doxygen/html/files/)
+ endif()
++
++if(Protobuf_PROTOC_EXECUTABLE)
++  set_target_properties(protobuf::protoc PROPERTIES
++  IMPORTED_LOCATION_RELEASE "${Protobuf_PROTOC_EXECUTABLE}"
++  )
++endif()
++
