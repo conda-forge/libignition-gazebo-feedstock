@@ -1,9 +1,13 @@
+BUILD:
+- aarch64-conda_cos7-linux-gnu
 c_compiler:
 - gcc
 c_compiler_version:
 - '12'
+cdt_arch:
+- aarch64
 cdt_name:
-- cos6
+- cos7
 channel_sources:
 - conda-forge
 channel_targets:
@@ -15,11 +19,11 @@ cxx_compiler_version:
 docker_image:
 - quay.io/condaforge/linux-anvil-cos7-x86_64
 libprotobuf:
-- 4.23.2
+- 4.23.3
 qt_main:
 - '5.15'
 target_platform:
-- linux-64
+- linux-aarch64
 tinyxml2:
 - '9'
 zip_keys:
