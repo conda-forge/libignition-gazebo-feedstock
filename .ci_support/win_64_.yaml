@@ -13,4 +13,4 @@ qt_main:
 target_platform:
 - win-64
 tinyxml2:
-- '9'
+- '10'
