@@ -19,7 +19,7 @@ source:
 
 build:
   skip: true  # [win]
-  number: 10
+  number: 11
   run_exports:
     - {{ pin_subpackage(name, max_pin='x') }}
 
@@ -27,6 +27,7 @@ requirements:
   build:
     - {{ compiler('cxx') }}
     - {{ compiler('c') }}
+    - {{ stdlib("c") }}
     - make  # [not win]
     - cmake
     - pkg-config
@@ -59,7 +60,6 @@ requirements:
     - tinyxml2
     - xorg-libxfixes  # [linux]
   run:
-    - __osx >={{ MACOSX_DEPLOYMENT_TARGET|default("10.9") }}  # [osx and x86_64]
 
 test:
   commands:
