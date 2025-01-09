@@ -11,7 +11,7 @@ package:
 
 source:
   - url: https://github.com/ignitionrobotics/ign-{{ component_name }}/archive/ignition-{{ component_name }}{{ version }}.tar.gz
-    sha256: 0c5036976b4811f18f3ea657ea3a738784e948449504f0a52b32bd7da9d7fe79
+    sha256: 06289012e320a824897f138e2c9486c10bd8b42d5ecb2564478c61fef822f5c9
     patches:
       - enable_win_ign.patch  # [win]
       - support_protobuf_crosscompilation.patch
