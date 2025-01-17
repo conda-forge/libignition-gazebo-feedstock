@@ -43,7 +43,7 @@ requirements:
     - libignition-common4
     - libignition-fuel-tools7
     - libignition-gui6
-    - libignition-physics5
+    - libignition-physics5 >=5.3
     - libignition-sensors6
     - libignition-rendering6
     - libignition-math6
