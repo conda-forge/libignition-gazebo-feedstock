@@ -1,6 +1,6 @@
 {% set component_name = "gazebo" %}
 {% set base_name = "libignition-" + component_name %}
-{% set version = "6_6.12.0" %}
+{% set version = "6_6.16.0" %}
 {% set version_package = version.split('_')[1] %}
 {% set major_version = version.split('_')[0] %}
 {% set name = base_name + major_version %}
@@ -11,15 +11,14 @@ package:
 
 source:
   - url: https://github.com/ignitionrobotics/ign-{{ component_name }}/archive/ignition-{{ component_name }}{{ version }}.tar.gz
-    sha256: 0c5036976b4811f18f3ea657ea3a738784e948449504f0a52b32bd7da9d7fe79
+    sha256: 06289012e320a824897f138e2c9486c10bd8b42d5ecb2564478c61fef822f5c9
     patches:
       - enable_win_ign.patch  # [win]
-      - 2006.patch
       - support_protobuf_crosscompilation.patch
 
 build:
   skip: true  # [win]
-  number: 13
+  number: 0
   run_exports:
     - {{ pin_subpackage(name, max_pin='x') }}
 
@@ -33,12 +32,6 @@ requirements:
     - pkg-config
     - ninja  # [win]
     - multisheller  # [win]
-    - {{ cdt('mesa-libgl-devel') }}  # [linux]
-    - {{ cdt('mesa-dri-drivers') }}  # [linux]
-    - {{ cdt('libselinux') }}  # [linux]
-    - {{ cdt('libxdamage') }}  # [linux]
-    - {{ cdt('libxxf86vm') }}  # [linux]
-    - {{ cdt('libxext') }}     # [linux]
     # We need protoc in build for cross-compiling
     - libprotobuf  # [build_platform != target_platform]
   host:
@@ -50,8 +43,8 @@ requirements:
     - libignition-common4
     - libignition-fuel-tools7
     - libignition-gui6
-    - libignition-physics5
-    - libignition-sensors6
+    - libignition-physics5 >=5.3
+    - libignition-sensors6 >=6.8
     - libignition-rendering6
     - libignition-math6
     - libignition-tools1
@@ -59,6 +52,7 @@ requirements:
     - qt-main
     - tinyxml2
     - xorg-libxfixes  # [linux]
+    - libgl-devel  # [linux]
   run:
 
 test:
