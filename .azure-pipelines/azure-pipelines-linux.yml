@@ -8,26 +8,26 @@ jobs:
     vmImage: ubuntu-latest
   strategy:
     matrix:
-      linux_64_libprotobuf5.28.2:
-        CONFIG: linux_64_libprotobuf5.28.2
-        UPLOAD_PACKAGES: 'True'
-        DOCKER_IMAGE: quay.io/condaforge/linux-anvil-x86_64:alma9
-        SHORT_CONFIG: linux_64_libprotobuf5.28.2
       linux_64_libprotobuf5.28.3:
         CONFIG: linux_64_libprotobuf5.28.3
         UPLOAD_PACKAGES: 'True'
         DOCKER_IMAGE: quay.io/condaforge/linux-anvil-x86_64:alma9
         SHORT_CONFIG: linux_64_libprotobuf5.28.3
-      linux_aarch64_libprotobuf5.28.2:
-        CONFIG: linux_aarch64_libprotobuf5.28.2
+      linux_64_libprotobuf5.29.3:
+        CONFIG: linux_64_libprotobuf5.29.3
         UPLOAD_PACKAGES: 'True'
         DOCKER_IMAGE: quay.io/condaforge/linux-anvil-x86_64:alma9
-        SHORT_CONFIG: linux_aarch64_libprotobuf5.28.2
+        SHORT_CONFIG: linux_64_libprotobuf5.29.3
       linux_aarch64_libprotobuf5.28.3:
         CONFIG: linux_aarch64_libprotobuf5.28.3
         UPLOAD_PACKAGES: 'True'
         DOCKER_IMAGE: quay.io/condaforge/linux-anvil-x86_64:alma9
         SHORT_CONFIG: linux_aarch64_libprotobuf5.28.3
+      linux_aarch64_libprotobuf5.29.3:
+        CONFIG: linux_aarch64_libprotobuf5.29.3
+        UPLOAD_PACKAGES: 'True'
+        DOCKER_IMAGE: quay.io/condaforge/linux-anvil-x86_64:alma9
+        SHORT_CONFIG: linux_aarch64_libprotobuf5.29.3
   timeoutInMinutes: 360
   variables: {}
 
