@@ -8,22 +8,14 @@ jobs:
     vmImage: macOS-13
   strategy:
     matrix:
-      osx_64_libprotobuf5.28.3:
-        CONFIG: osx_64_libprotobuf5.28.3
+      osx_64_:
+        CONFIG: osx_64_
         UPLOAD_PACKAGES: 'True'
-        SHORT_CONFIG: osx_64_libprotobuf5.28.3
-      osx_64_libprotobuf5.29.3:
-        CONFIG: osx_64_libprotobuf5.29.3
+        SHORT_CONFIG: osx_64_
+      osx_arm64_:
+        CONFIG: osx_arm64_
         UPLOAD_PACKAGES: 'True'
-        SHORT_CONFIG: osx_64_libprotobuf5.29.3
-      osx_arm64_libprotobuf5.28.3:
-        CONFIG: osx_arm64_libprotobuf5.28.3
-        UPLOAD_PACKAGES: 'True'
-        SHORT_CONFIG: osx_arm64_libprotobuf5.28.3
-      osx_arm64_libprotobuf5.29.3:
-        CONFIG: osx_arm64_libprotobuf5.29.3
-        UPLOAD_PACKAGES: 'True'
-        SHORT_CONFIG: osx_arm64_libprotobuf5.29.3
+        SHORT_CONFIG: osx_arm64_
   timeoutInMinutes: 360
   variables: {}
 
