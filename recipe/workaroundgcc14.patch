@@ -1,0 +1,22 @@
+From c4d959cb521f790c75f170a67d88b400a4bb508c Mon Sep 17 00:00:00 2001
+From: Silvio Traversaro <silvio@traversaro.it>
+Date: Tue, 19 Aug 2025 18:17:12 +0200
+Subject: [PATCH] Workaround for gcc 14
+
+Signed-off-by: Silvio Traversaro <silvio@traversaro.it>
+---
+ src/systems/physics/Physics.hh | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/systems/physics/Physics.hh b/src/systems/physics/Physics.hh
+index 4f8d7fcce3..5c19ef2ed4 100644
+--- a/src/systems/physics/Physics.hh
++++ b/src/systems/physics/Physics.hh
+@@ -17,6 +17,7 @@
+ #ifndef GZ_GAZEBO_SYSTEMS_PHYSICS_HH_
+ #define GZ_GAZEBO_SYSTEMS_PHYSICS_HH_
+ 
++#include <algorithm>
+ #include <memory>
+ #include <unordered_map>
+ #include <utility>

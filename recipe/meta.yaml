@@ -15,10 +15,14 @@ source:
     patches:
       - enable_win_ign.patch  # [win]
       - support_protobuf_crosscompilation.patch
+      - 3022.patch
+      - fixprotobuf30.patch
+      # Remove once https://github.com/conda-forge/libignition-physics-feedstock/pull/38 is merged
+      - workaroundgcc14.patch
 
 build:
   skip: true  # [win]
-  number: 3
+  number: 4
   run_exports:
     - {{ pin_subpackage(name, max_pin='x') }}
 
