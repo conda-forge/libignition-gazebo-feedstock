@@ -15,6 +15,7 @@ source:
     patches:
       - enable_win_ign.patch  # [win]
       - support_protobuf_crosscompilation.patch
+      - 3022.patch
 
 build:
   skip: true  # [win]
